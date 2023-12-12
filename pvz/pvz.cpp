@@ -52,7 +52,7 @@ struct averageZhiwu {
 struct visualZhiwu {
 	int type; //植物类型 0：无 1：第一种植物
 	int x, y; //鼠标指向的位置
-} unmap[3][9];
+} unmap[3][9], checkUnmap;
 
 struct sunshineBall {
 	int x, y; //飘落过程中的位置
@@ -69,7 +69,7 @@ struct sunshineBall {
 	vector2 currentPresentation;
 	float speed;
 	int status;
-} balls[10];
+} balls[100];
 
 struct zombie {
 	int x, y;
@@ -233,7 +233,7 @@ void gameInit() {
 void drawCards() {
 	//植物卡牌填充卡槽
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
-		int x = 338 + i * 65;
+		int x = 338 - 112 + i * 65;
 		int y = 6;
 		putimage(x, y, &imgCards[i]);
 	}
@@ -259,21 +259,28 @@ void drawPlant() {
 
 	//渲染拖动过程的植物
 	if (curZhiWu) {
-
+		bool changeFlag = 1;
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 9; j++) {
-				if (unmap[i][j].type > 0) {
-
-					unmap[i][j].x = 259 + j * 81;
+				if (unmap[i][j].type > 0 && map[i][j].type == 0) {
+					unmap[i][j].x = 259 - 112 + j * 81;
 					unmap[i][j].y = 179 + i * 102;
 					IMAGE* unimg = imgZhiWu[unmap[i][j].type - 1][0];
 					putimagePNG(unmap[i][j].x, unmap[i][j].y, unimg);
-
+					if (unmap[i][j].x == checkUnmap.x && unmap[i][j].y == checkUnmap.y) {
+						changeFlag = 0;
+					}
+					checkUnmap = unmap[i][j];
 				}
 			}
 		}
+		if (changeFlag) {
+			memset(unmap, 0, sizeof(unmap));
+		}
 		IMAGE* img = imgZhiWu[curZhiWu - 1][1];
 		putimagePNG(curX - img->getwidth() / 2, curY - img->getheight() / 2, img);
+	}
+	else {
 		memset(unmap, 0, sizeof(unmap));
 	}
 }
@@ -291,7 +298,7 @@ void drawSunshine() {
 	//显示阳光值
 	char scoreText[8];
 	sprintf_s(scoreText, sizeof(scoreText), "%d", sunshine);
-	int textX = 290, tmp = sunshine;
+	int textX = 290 - 112, tmp = sunshine;
 	while (tmp) {
 		textX -= 5;
 		tmp /= 10;
@@ -337,7 +344,7 @@ void updateWindow() {
 	
 	//显示游戏背景和植物卡槽
 	putimage(-112, 0, &imgBackground);
-	putimagePNG(250, 0, &imgBar);
+	putimagePNG(250 - 112, 0, &imgBar);
 
 	drawCards();
 	drawPlant();
@@ -708,6 +715,7 @@ void collectSunshine(ExMessage* msg) {
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
 	int width = imgSunshineBall[0].getwidth();
 	int height = imgSunshineBall[0].getheight();
+
 	for (int i = 0; i < 10; i++) {
 		if (balls[i].used) {
 			//int x = balls[i].x;
@@ -748,9 +756,10 @@ void userClick() {
 	static int status = 0;
 
 	if (peekmessage(&msg)) {
+		int mmm = 87;
 		//实现植物的选取和取消选取
 		if (msg.message == WM_LBUTTONDOWN && firstDown == 0) {
-			if (msg.x < 338 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
+			if (msg.x > 338 - 112 && msg.x < 338 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
 				int index = (msg.x - 338 + 112) / 65;
 				status = 1;
 				curZhiWu = index + 1;
@@ -762,7 +771,6 @@ void userClick() {
 				collectSunshine(&msg);
 			}
 		}
-		
 		else if (msg.message == WM_RBUTTONDOWN && firstDown == 1) {
 			firstDown = 0;
 			curZhiWu = 0;
@@ -772,18 +780,16 @@ void userClick() {
 			curX = msg.x;
 			curY = msg.y;
 
-			if (msg.x > 256 - 112 && msg.y > 179 && msg.y < 489) {
+			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 179 && msg.y < 489) {
 				int row = (msg.y - 179) / 102;
 				int col = (msg.x - 256 + 112) / 81;
 				unmap[row][col].type = curZhiWu;
 			}
-
 		}
 		else if (msg.message == WM_LBUTTONDOWN && firstDown == 1) {
-
-			if (msg.x > 256 && msg.y > 179 && msg.y < 489) {
+			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 179 && msg.y < 489) {
 				int row = (msg.y - 179) / 102;
-				int col = (msg.x - 256) / 81;
+				int col = (msg.x - 256 + 112) / 81;
 
 				if (map[row][col].type == 0) {
 					map[row][col].type = curZhiWu;
@@ -791,7 +797,7 @@ void userClick() {
 					map[row][col].shootTime = 0;
 
 					map[row][col].x = 256 - 112 + col * 81;
-					map[row][col].y = 179 + row * 102 + 14;
+					map[row][col].y = 179 + row * 102;
 				}
 
 				firstDown = 0;
@@ -908,10 +914,10 @@ void barDown() {
 	for (int y = -height; y <= 0; y++) {
 		BeginBatchDraw();
 		putimage(-112, 0, &imgBackground);
-		putimagePNG(250, y, &imgBar);
+		putimagePNG(250 - 112, y, &imgBar);
 
 		for (int i = 0; i < ZHI_WU_COUNT; i++) {
-			int x = 338 + i * 65;
+			int x = 338 - 112 + i * 65;
 
 			putimage(x, 6 + y, &imgCards[i]);
 		}
@@ -938,7 +944,7 @@ bool checkOver() {
 int main() {
 	gameInit();
 	startUI();
-	viewScene();
+	//viewScene();
 	barDown();
 
 	int timer = 0;
