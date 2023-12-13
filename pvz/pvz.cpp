@@ -40,7 +40,6 @@ enum {GOING, WIN, FAIL};
 struct averageZhiwu {
 	int type; //植物类型 0：无 1：第一种植物
 	int frameIndex; //帧序号
-	bool eaten; //是否处于被吃状态
 	int deadTime; //死亡计时器
 
 	int timer;
@@ -69,7 +68,7 @@ struct sunshineBall {
 	vector2 currentPresentation;
 	float speed;
 	int status;
-} balls[100];
+} balls[20];
 
 struct zombie {
 	int x, y;
@@ -288,8 +287,7 @@ void drawPlant() {
 void drawSunshine() {
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
 	for (int i = 0; i < ballMax; i++) {
-		//if (balls[i].used || balls[i].xoff) {
-		if(balls[i].used){
+		if(balls[i].used || balls[i].status == SUNSHINE_COLLECT) {
 			IMAGE* img = &imgSunshineBall[balls[i].frameIndex];
 			putimagePNG(balls[i].currentPresentation.x, balls[i].currentPresentation.y, img);
 		}
@@ -380,7 +378,7 @@ void creatSunshine() {
 	count++;
 	static int fre = 110;
 	if (count >= fre) {
-		fre = 35 + rand() % 75;
+		fre = 500 + rand() % 75;
 		count = 0;
 
 		//从阳光池中取一个可用阳光
@@ -399,7 +397,7 @@ void creatSunshine() {
 		//balls[i].yoff = 0;
 		balls[i].status = SUNSHINE_DOWN;
 		balls[i].t = 0;
-		balls[i].p1 = vector2(260 - 112 + rand() % (900 - 260), 60);
+		balls[i].p1 = vector2(260 - 112 + rand() % (900 - 260 - 112), 60);
 		balls[i].p4 = vector2(balls[i].p1.x, 200 + (rand() % 4) * 90);
 		float off = 2.0;
 		float distance = balls[i].p4.y - balls[i].p1.y;
@@ -413,7 +411,7 @@ void creatSunshine() {
 			if (map[i][j].type == XIANG_RI_KUI + 1) {
 				map[i][j].timer++;
 
-				if (map[i][j].timer > 100) {
+				if (map[i][j].timer > 500) {
 					map[i][j].timer = 0;
 
 					int k;
@@ -453,18 +451,9 @@ void updateSunshine() {
 			}
 			else if (balls[i].status == SUNSHINE_GROUND) {
 				balls[i].timer++;
-				if (balls[i].timer > 100) {
+				if (balls[i].timer > 200) {
 					balls[i].timer = 0;
 					balls[i].used = 0;
-				}
-			}
-			else if (balls[i].status == SUNSHINE_COLLECT) {
-				struct sunshineBall* sun = &balls[i];
-				sun->t += sun->speed;
-				sun->currentPresentation = sun->p1 + sun->t * (sun->p4 - sun->p1);
-				if (sun->t > 1) {
-					sun->used = 0;
-					sunshine += 25;
 				}
 			}
 			else if (balls[i].status == SUNSHINE_PRODUCT) {
@@ -476,33 +465,20 @@ void updateSunshine() {
 					sun->timer = 0;
 				}
 			}
-			//balls[i].frameIndex = (balls[i].frameIndex + 1) % 29;
-			//if (balls[i].timer == 0) {
-			//	balls[i].y += 2;
-			//}
-			//if (balls[i].y >= balls[i].destY) {
-			//	balls[i].timer++;
-			//	if (balls[i].timer > 100) {
-			//		balls[i].used = 0;
-			//	}
-			//}
 		}
-		//else if (balls[i].xoff) {
-		//	//设置阳光球偏移量
-		//	float destX = 0;
-		//	float destY = 262;
-		//	float angle = atan((balls[i].y - destY) / (balls[i].x - destX));
-		//	balls[i].yoff = 4 * cos(angle);
-		//	balls[i].yoff = 4 * sin(angle);
+		else if (balls[i].status == SUNSHINE_COLLECT) {
+			//配置音乐
+			mciSendString("play res/sunshine.mp3", 0, 0, 0);
 
-		//	balls[i].x -= balls[i].xoff;
-		//	balls[i].y -= balls[i].yoff;
-		//	if (balls[i].y < 0 || balls[i].x < 262) {
-		//		balls[i].xoff = 0;
-		//		balls[i].yoff = 0;
-		//		sunshine += 25;
-		//	}
-		//}
+			struct sunshineBall* sun = &balls[i];
+			sun->t += sun->speed;
+			sun->currentPresentation = sun->p1 + sun->t * (sun->p4 - sun->p1);
+			if (sun->t > 1) {
+				sun->used = 0;
+				sunshine += 25;
+				balls[i].status = -1;
+			}
+		}
 	}
 }
 
@@ -511,12 +487,12 @@ void createZombie() {
 		return;
 	}
 
-	static int zombieFrequence = 200;
+	static int zombieFrequence = 300;
 	static int count = 0;
 	count++;
 	if (count > zombieFrequence) {
 		count = 0;
-		zombieFrequence = 300 + rand() % 200;
+		zombieFrequence = 500 + rand() % 200;
 
 		int i;
 		int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
@@ -578,7 +554,7 @@ void shoot() {
 	int lines[3] = { 0 };
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
-	int dangerX = WIN_WIDTH - imgZombie[0].getwidth();
+	int dangerX = WIN_WIDTH;
 	for (int i = 0; i < zombieMax; i++) {
 		if (zombies[i].used && zombies[i].x < dangerX) {
 			lines[zombies[i].row] = 1;
@@ -587,7 +563,7 @@ void shoot() {
 
 	for (int i = 0; i < 3; i++) { 
 		for (int j = 0; j < 9; j++) {
-			if (map[i][j].type == WAN_DOU + 1 && lines[i]) {
+			if (map[i][j].type == WAN_DOU + 1 && lines[i] && map[i][j].x < zombies[i].x) {
 				map[i][j].shootTime++;
 				if (map[i][j].shootTime > 20) {
 					map[i][j].shootTime = 0;
@@ -628,7 +604,7 @@ void updateBullets() {
 
 			if (bullets[i].blast) {
 				bullets[i].frameIndex++;
-				if (bullets[i].frameIndex >= 4) {
+				if (bullets[i].frameIndex >= 8) {
 					bullets[i].used = 0;
 				}
 			}
@@ -669,22 +645,18 @@ void zombie2Plant() {
 			int x2 = plantX + 60;
 			int x3 = zombies[i].x + 80;
 			if (x3 > x1 && x3 < x2) {
-				if (map[row][j].eaten) {
-					map[row][j].deadTime++;
+				zombies[i].eating = 1;
+				zombies[i].speed = 0;
+				for (int k = 0; k < zombieMax; k++) {
+					if (zombies[k].eating) {
+						map[row][j].deadTime++;
+					}
 					if (map[row][j].deadTime > 100) {
 						map[row][j].deadTime = 0;
 						map[row][j].type = 0;
 						zombies[i].eating = 0;
-						zombies[i].frameIndex = 0;
 						zombies[i].speed = 1;
 					}
-				}
-				else {
-					map[row][j].eaten = 1;
-					map[row][j].deadTime = 0;
-					zombies[i].eating = 1;
-					zombies[i].speed = 0;
-					zombies[i].frameIndex = 0;
 				}
 			}
 		}
@@ -725,21 +697,13 @@ void collectSunshine(ExMessage* msg) {
 			if (msg->x > x && msg->x < x + width && msg->y > y && msg->y < y + height) {
 				balls[i].used = 0;
 				balls[i].status = SUNSHINE_COLLECT;
-				//配置音乐
-				mciSendString("play res/sunshine.mp3", 0, 0, 0);
-
-				//设置阳光球偏移量
-				/*float destX = 0;
-				float destY = 262;
-				float angle = atan((balls[i].y - destY) / (balls[i].x - destX));
-				balls[i].yoff = 4 * cos(angle);
-				balls[i].yoff = 4 * sin(angle);*/
 				balls[i].p1 = balls[i].currentPresentation;
-				balls[i].p4 = vector2(262, 0);
+				balls[i].p4 = vector2(262 - 112, 0);
 				balls[i].t = 0;
 				float distance = dis(balls[i].p1 - balls[i].p4);
 				float off = 8.0;
-				balls[i].speed = 1.0 / (distance / off);
+				balls[i].speed = 2.0 / (distance / off);
+
 
 				//设置阳光值最大值
 				if (sunshine >= 9999) {
@@ -945,7 +909,7 @@ int main() {
 	gameInit();
 	startUI();
 	//viewScene();
-	barDown();
+	//barDown();
 
 	int timer = 0;
 	while (1) {
