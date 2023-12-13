@@ -46,12 +46,12 @@ struct averageZhiwu {
 	int x, y;
 
 	int shootTime;
-} map[3][9];
+} map[5][9];
 
 struct visualZhiwu {
 	int type; //植物类型 0：无 1：第一种植物
 	int x, y; //鼠标指向的位置
-} unmap[3][9], checkUnmap;
+} unmap[5][9], checkUnmap;
 
 struct sunshineBall {
 	int x, y; //飘落过程中的位置
@@ -108,20 +108,6 @@ int sunshine; //阳光值
 int killCount; //已击杀僵尸数
 int zombieCount; //已出现僵尸数
 int gameStatus; //游戏状态
-
-//函数声明
-//bool fileExist(const char* name);
-//void gameInit();
-//void startUI();
-//void userClick();
-//void updateWindow();
-//void updateGame();
-//void creatSunshine();
-//void collectSunshine(ExMessage* msg);
-//void updateSunshine();
-//void createZombie();
-//void drawZombie();
-//void updateZombie();
 
 bool fileExist(const char* name) {
 	FILE* fp = fopen(name, "r");
@@ -206,10 +192,11 @@ void gameInit() {
 		loadimage(&imgZombie[i], name);
 	}
 
+	//初始化豌豆子弹的帧图片数组
 	loadimage(&imgBulletNormal, "res/bullets/bullet_normal.png");
 	memset(bullets, 0, sizeof(bullets));
 
-	//初始化豌豆子弹的帧图片数组
+	//初始化豌豆子弹的破裂帧图片数组
 	loadimage(&imgBulletBlast[3], "res/bullets/bullet_blast.png");
 	for (int i = 0; i < 3; i++) {
 		float k = (i + 1) * 0.2;
@@ -232,7 +219,7 @@ void gameInit() {
 void drawCards() {
 	//植物卡牌填充卡槽
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
-		int x = 338 - 112 + i * 65;
+		int x = 268 - 112 + i * 65;
 		int y = 6;
 		putimage(x, y, &imgCards[i]);
 	}
@@ -240,18 +227,15 @@ void drawCards() {
 
 void drawPlant() {
 	//一帧一帧输出，实现植物摇摆
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
-				//int x = 259 + j * 81;
-				//int y = 179 + i * 102;
 				int zhiWuType = map[i][j].type - 1;
 				int index = map[i][j].frameIndex;
 				if (!index) {
 					index++;
 				}
-				//putimagePNG(x, y, imgZhiWu[zhiWuType][index]);
-				putimagePNG(map[i][j].x, map[i][j].y, imgZhiWu[zhiWuType][index]);
+				putimagePNG(map[i][j].x, map[i][j].y + 15, imgZhiWu[zhiWuType][index]);
 			}
 		}
 	}
@@ -259,11 +243,11 @@ void drawPlant() {
 	//渲染拖动过程的植物
 	if (curZhiWu) {
 		bool changeFlag = 1;
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 5; i++) {
 			for (int j = 0; j < 9; j++) {
 				if (unmap[i][j].type > 0 && map[i][j].type == 0) {
 					unmap[i][j].x = 259 - 112 + j * 81;
-					unmap[i][j].y = 179 + i * 102;
+					unmap[i][j].y = 77 + 15 + i * 102;
 					IMAGE* unimg = imgZhiWu[unmap[i][j].type - 1][0];
 					putimagePNG(unmap[i][j].x, unmap[i][j].y, unimg);
 					if (unmap[i][j].x == checkUnmap.x && unmap[i][j].y == checkUnmap.y) {
@@ -296,7 +280,7 @@ void drawSunshine() {
 	//显示阳光值
 	char scoreText[8];
 	sprintf_s(scoreText, sizeof(scoreText), "%d", sunshine);
-	int textX = 290 - 112, tmp = sunshine;
+	int textX = 220 - 112, tmp = sunshine;
 	while (tmp) {
 		textX -= 5;
 		tmp /= 10;
@@ -341,25 +325,25 @@ void updateWindow() {
 	BeginBatchDraw(); //开始缓冲
 	
 	//显示游戏背景和植物卡槽
-	putimage(-112, 0, &imgBackground);
-	putimagePNG(250 - 112, 0, &imgBar);
+	putimage(-112, 15, &imgBackground);
+	putimagePNG(180 - 112, 0, &imgBar);
 
 	drawCards();
 	drawPlant();
-	drawSunshine();
 	drawZombie();
 	drawBullet();
+	drawSunshine();
 
 	EndBatchDraw(); //结束缓冲
 }
 
 void updatePlant() {
 	static int count = 0;
-	if (++count < 2) return;
+	if (++count < 3) return;
 	count = 0;
 
 	//更新摇摆帧
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
 				map[i][j].frameIndex++;
@@ -373,7 +357,7 @@ void updatePlant() {
 	}
 }
 
-void creatSunshine() {
+void createSunshine() {
 	static int count;
 	count++;
 	static int fre = 110;
@@ -389,24 +373,19 @@ void creatSunshine() {
 		
 		balls[i].used = 1;
 		balls[i].frameIndex = 0;
-		//balls[i].x = 260 + rand() % (900 - 260);
-		//balls[i].y = 60;
-		//balls[i].destY = 200 + (rand() % 4) * 90;
 		balls[i].timer = 0;
-		//balls[i].xoff = 0;
-		//balls[i].yoff = 0;
 		balls[i].status = SUNSHINE_DOWN;
 		balls[i].t = 0;
-		balls[i].p1 = vector2(260 - 112 + rand() % (900 - 260 - 112), 60);
+		balls[i].p1 = vector2(260 - 112 + rand() % (900 - 260), 60);
 		balls[i].p4 = vector2(balls[i].p1.x, 200 + (rand() % 4) * 90);
 		float off = 2.0;
 		float distance = balls[i].p4.y - balls[i].p1.y;
-		balls[i].speed = 1.0 / (distance / off);
+		balls[i].speed = 1.5 / (distance / off);
 	}
 
 	//向日葵生产阳光
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type == XIANG_RI_KUI + 1) {
 				map[i][j].timer++;
@@ -420,7 +399,7 @@ void creatSunshine() {
 					}
 					balls[k].used = 1;
 					balls[k].p1 = vector2(map[i][j].x, map[i][j].y);
-					int w = (100 + rand() % 50) * (rand() % 2 ? 1 : -1);
+					int w = (30 + rand() % 15) * (rand() % 2 ? 1 : -1);
 					balls[k].p4 = vector2(map[i][j].x + w,
 						map[i][j].y + imgZhiWu[XIANG_RI_KUI][0]->getwidth() - imgSunshineBall[0].getwidth());
 					balls[k].p2 = vector2(balls[k].p1.x + w * 0.3, balls[k].p1.y - 100);
@@ -501,8 +480,8 @@ void createZombie() {
 			memset(&zombies[i], 0, sizeof(zombies[i]));
 			zombies[i].used = 1;
 			zombies[i].x = WIN_WIDTH;
-			zombies[i].row = rand() % 3;
-			zombies[i].y = 172 + (1 + zombies[i].row) * 100;
+			zombies[i].row = rand() % 5;
+			zombies[i].y = 77 + (1 + zombies[i].row) * 102;
 			zombies[i].speed = 1;
 			zombies[i].blood = 100;
 			zombieCount++;
@@ -515,7 +494,7 @@ void updateZombie() {
 
 	static int count1 = 0;
 	count1++;
-	if (count1 > 4) {
+	if (count1 > 2) {
 		count1 = 0;
 		//更新僵尸位置
 		for (int i = 0; i < zombieMax; i++) {
@@ -530,7 +509,7 @@ void updateZombie() {
 
 	static int count2 = 0;
 	count2++;
-	if (count2 > 4) {
+	if (count2 > 2) {
 		count2 = 0;
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used) {
@@ -548,42 +527,48 @@ void updateZombie() {
 
 void shoot() {
 	static int count1 = 0;
-	if (++count1 < 2) return;
+	if (++count1 < 3) return;
 	count1 = 0;
 
-	int lines[3] = { 0 };
+	int lines[5] = { 0 };
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
-	int dangerX = WIN_WIDTH;
+	int dangerX = WIN_WIDTH - 30;
 	for (int i = 0; i < zombieMax; i++) {
 		if (zombies[i].used && zombies[i].x < dangerX) {
 			lines[zombies[i].row] = 1;
 		}
 	}
 
-	for (int i = 0; i < 3; i++) { 
+	for (int i = 0; i < 5; i++) { 
 		for (int j = 0; j < 9; j++) {
-			if (map[i][j].type == WAN_DOU + 1 && lines[i] && map[i][j].x < zombies[i].x) {
-				map[i][j].shootTime++;
-				if (map[i][j].shootTime > 20) {
-					map[i][j].shootTime = 0;
+			if (map[i][j].type == WAN_DOU + 1 && lines[i]) {
+				for (int k = 0; k < zombieMax; k++) {
+					if (zombies[k].row == i && map[i][j].x < zombies[k].x) {
+						map[i][j].shootTime++;
+						if (map[i][j].shootTime > 20) {
+							map[i][j].shootTime = 0;
 
-					int k = 0;
-					for (k = 0; k < bulletMax && bullets[k].used; k++);
-					if (k < bulletMax) {
-						bullets[k].used = 1;
-						bullets[k].row = i;
-						bullets[k].speed = 6;
-						
-						bullets[k].blast = 0;
-						bullets[k].frameIndex = 0;
-						int zhiwuX = 256 - 112 + j * 81;
-						int zhiwuY = 179 + i * 102 + 14;
-						bullets[k].x = zhiwuX + imgZhiWu[map[i][j].type - 1][0]->getwidth() - 10;
-						bullets[k].y = zhiwuY + 10;
+							int k = 0;
+							for (k = 0; k < bulletMax && bullets[k].used; k++);
+							if (k < bulletMax) {
+								bullets[k].used = 1;
+								bullets[k].row = i;
+								bullets[k].speed = 14;
 
+								bullets[k].blast = 0;
+								bullets[k].frameIndex = 0;
+								int zhiwuX = 256 - 112 + j * 81;
+								int zhiwuY = 77 + i * 102 + 27;
+								bullets[k].x = zhiwuX + imgZhiWu[map[i][j].type - 1][0]->getwidth() - 10;
+								bullets[k].y = zhiwuY;
+
+							}
+						}
+						break;
 					}
 				}
+				
 			}
 		}
 	}
@@ -604,7 +589,7 @@ void updateBullets() {
 
 			if (bullets[i].blast) {
 				bullets[i].frameIndex++;
-				if (bullets[i].frameIndex >= 8) {
+				if (bullets[i].frameIndex > 3) {
 					bullets[i].used = 0;
 				}
 			}
@@ -671,7 +656,7 @@ void collisionCheck() {
 void updateGame() {
 	updatePlant();
 
-	creatSunshine(); //创建阳光
+	createSunshine(); //创建阳光
 	updateSunshine(); //更新阳光的状态
 
 	createZombie(); //创建僵尸
@@ -690,19 +675,17 @@ void collectSunshine(ExMessage* msg) {
 
 	for (int i = 0; i < 10; i++) {
 		if (balls[i].used) {
-			//int x = balls[i].x;
-			//int y = balls[i].y;
 			int x = balls[i].currentPresentation.x;
 			int y = balls[i].currentPresentation.y;
 			if (msg->x > x && msg->x < x + width && msg->y > y && msg->y < y + height) {
 				balls[i].used = 0;
 				balls[i].status = SUNSHINE_COLLECT;
 				balls[i].p1 = balls[i].currentPresentation;
-				balls[i].p4 = vector2(262 - 112, 0);
+				balls[i].p4 = vector2(262 - 112 - 70, 0);
 				balls[i].t = 0;
 				float distance = dis(balls[i].p1 - balls[i].p4);
 				float off = 8.0;
-				balls[i].speed = 2.0 / (distance / off);
+				balls[i].speed = 3.0 / (distance / off);
 
 
 				//设置阳光值最大值
@@ -723,8 +706,8 @@ void userClick() {
 		int mmm = 87;
 		//实现植物的选取和取消选取
 		if (msg.message == WM_LBUTTONDOWN && firstDown == 0) {
-			if (msg.x > 338 - 112 && msg.x < 338 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
-				int index = (msg.x - 338 + 112) / 65;
+			if (msg.x > 268 - 112 && msg.x < 268 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
+				int index = (msg.x - 268 + 112) / 65;
 				status = 1;
 				curZhiWu = index + 1;
 				firstDown = 1;
@@ -744,15 +727,15 @@ void userClick() {
 			curX = msg.x;
 			curY = msg.y;
 
-			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 179 && msg.y < 489) {
-				int row = (msg.y - 179) / 102;
+			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 77 + 15 && msg.y < 591 + 15) {
+				int row = (msg.y - 77) / 102;
 				int col = (msg.x - 256 + 112) / 81;
 				unmap[row][col].type = curZhiWu;
 			}
 		}
 		else if (msg.message == WM_LBUTTONDOWN && firstDown == 1) {
-			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 179 && msg.y < 489) {
-				int row = (msg.y - 179) / 102;
+			if (msg.x > 256 - 112 && msg.x < 985 - 112 && msg.y > 77 + 15 && msg.y < 591 + 15) {
+				int row = (msg.y - 77) / 102;
 				int col = (msg.x - 256 + 112) / 81;
 
 				if (map[row][col].type == 0) {
@@ -761,7 +744,7 @@ void userClick() {
 					map[row][col].shootTime = 0;
 
 					map[row][col].x = 256 - 112 + col * 81;
-					map[row][col].y = 179 + row * 102;
+					map[row][col].y = 77 + row * 102;
 				}
 
 				firstDown = 0;
@@ -769,7 +752,6 @@ void userClick() {
 				status = 0;
 			}
 		}
-
 	}
 }
 
@@ -916,7 +898,7 @@ int main() {
 		userClick();
 		//延迟输出，减缓更新速度
 		timer += getDelay();
-		if (timer > 20) {
+		if (timer > 30) {
 			timer = 0;
 			updateWindow();
 			updateGame();
