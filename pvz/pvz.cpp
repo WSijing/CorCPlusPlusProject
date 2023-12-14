@@ -60,9 +60,6 @@ struct sunshineBall {
 	bool used; //是否使用过，1：未使用过 0：使用过
 	int timer;
 
-	float xoff;
-	float yoff;
-
 	float t; //贝塞尔时间点 0..1
 	vector2 p1, p2, p3, p4;
 	vector2 currentPresentation;
@@ -91,7 +88,7 @@ struct bullet {
 } bullets[30];
 
 IMAGE imgBackground; //背景图片
-IMAGE imgBar; //植物卡槽
+IMAGE imgBar5; //植物卡槽
 IMAGE imgCards[ZHI_WU_COUNT]; //植物卡牌
 IMAGE* imgZhiWu[ZHI_WU_COUNT][20]; //植物帧图
 IMAGE imgSunshineBall[29];
@@ -100,6 +97,7 @@ IMAGE imgBulletNormal;
 IMAGE imgBulletBlast[4];
 IMAGE imgZombieEating[21];
 IMAGE imgZombieStand[11];
+IMAGE imgZombieDead[10];
 
 int curX, curY; //当前选中植物在移动过程中的位置
 int curZhiWu; //0：未选中 1：选择第一种植物
@@ -123,7 +121,7 @@ bool fileExist(const char* name) {
 void gameInit() {
 	//加载背景图片
 	loadimage(&imgBackground, "res/bg.jpg");
-	loadimage(&imgBar, "res/bar5.png");
+	loadimage(&imgBar5, "res/bar5.png");
 
 	//初始化植物相关状态
 	memset(imgZhiWu, 0, sizeof(imgZhiWu));
@@ -205,11 +203,17 @@ void gameInit() {
 
 	//初始化僵尸吃植物的帧图片数组
 	for (int i = 0; i < 21; i++) {
-		sprintf_s(name, "res/zm_eat/%d.png", i + 1);
+		sprintf_s(name, sizeof(name), "res/zm_eat/%d.png", i + 1);
 		loadimage(&imgZombieEating[i], name);
 	}
 
-	//初始化僵尸行走的帧图片数组
+	//初始化僵尸死亡的帧图片数组
+	for (int i = 0; i < 11; i++) {
+		sprintf_s(name, sizeof(name), "res/zm_dead/%d.png", i + 1);
+		loadimage(&imgZombieDead[i], name);
+	}
+
+	//初始化开场僵尸的帧图片数组
 	for (int i = 0; i < 11; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_stand/%d.png", i + 1);
 		loadimage(&imgZombieStand[i], name);
@@ -293,7 +297,10 @@ void drawZombie() {
 	for (int i = 0; i < zombieMax; i++) {
 		if (zombies[i].used) {
 			IMAGE* img = NULL;
-			if (zombies[i].eating) {
+			if (zombies[i].dead) {
+				img = imgZombieDead;
+			}
+			else if (zombies[i].eating) {
 				img = imgZombieEating;
 			}
 			else {
@@ -301,7 +308,7 @@ void drawZombie() {
 			}
 			img += zombies[i].frameIndex;
 
-			putimagePNG(zombies[i].x, zombies[i].y - img->getheight(), img);
+			putimagePNG(zombies[i].x, zombies[i].y - 144, img);
 		}
 	}
 }
@@ -326,7 +333,7 @@ void updateWindow() {
 	
 	//显示游戏背景和植物卡槽
 	putimage(-112, 15, &imgBackground);
-	putimagePNG(180 - 112, 0, &imgBar);
+	putimagePNG(180 - 112, 0, &imgBar5);
 
 	drawCards();
 	drawPlant();
@@ -484,6 +491,7 @@ void createZombie() {
 			zombies[i].y = 77 + (1 + zombies[i].row) * 102;
 			zombies[i].speed = 1;
 			zombies[i].blood = 100;
+			zombies[i].dead = 0;
 			zombieCount++;
 		}
 	}
@@ -513,7 +521,17 @@ void updateZombie() {
 		count2 = 0;
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used) {
-				if (zombies[i].eating) {
+				if (zombies[i].dead) {
+					zombies[i].frameIndex++;
+					if (zombies[i].frameIndex > 11) {	//如果僵尸死亡就增加死亡的帧数，并在加完之后删除僵尸
+						zombies[i].used = 0;
+						killCount++;
+						if (killCount == ZOMBIE_MAX) {
+							gameStatus = WIN;
+						}
+					}
+				}
+				else if (zombies[i].eating) {
 					zombies[i].frameIndex = (zombies[i].frameIndex + 1) % 21;
 				}
 				else {
@@ -609,9 +627,15 @@ void bullet2Zombie() {
 			int x2 = zombies[j].x + 110;
 			int x = bullets[i].x;
 			if (bullets[i].row == zombies[j].row && x > x1 && x < x2) {
-				zombies[j].blood -= 5;
+				zombies[j].blood -= 10;
 				bullets[i].blast = 1;
 				bullets[i].speed = 0;
+
+				if (zombies[j].blood <= 0) {
+					zombies[j].dead = 1;
+					zombies[j].speed = 0;
+					zombies[j].frameIndex = 0;
+				}
 			}
 		}
 	}
@@ -856,14 +880,14 @@ void viewScene() {
 }
 
 void barDown() {
-	int height = imgBar.getheight();
+	int height = imgBar5.getheight();
 	for (int y = -height; y <= 0; y++) {
 		BeginBatchDraw();
-		putimage(-112, 0, &imgBackground);
-		putimagePNG(250 - 112, y, &imgBar);
+		putimage(-112, 15, &imgBackground);
+		putimagePNG(250 - 112 - 70, y, &imgBar5);
 
 		for (int i = 0; i < ZHI_WU_COUNT; i++) {
-			int x = 338 - 112 + i * 65;
+			int x = 338 - 112 - 70 + i * 65;
 
 			putimage(x, 6 + y, &imgCards[i]);
 		}

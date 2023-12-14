@@ -1,28 +1,28 @@
 ﻿  pvz.cpp
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(127,13): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(186,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(216,11): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(217,129): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(217,94): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(196,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(290,76): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(290,44): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(394,36): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(396,18): warning C4244: “初始化”: 从“__int64”转换到“float”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(397,24): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(419,67): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(419,42): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(420,67): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(420,42): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(422,23): warning C4305: “=”: 从“double”到“float”截断
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(692,10): warning C4244: “初始化”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(693,10): warning C4244: “初始化”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(700,20): warning C4244: “初始化”: 从“__int64”转换到“float”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(702,26): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(833,49): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(833,35): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(848,39): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(848,26): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(859,50): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
-D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(859,36): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(111,13): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(170,12): warning C4244: “参数”: 从“time_t”转换到“unsigned int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(200,11): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(201,129): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(201,94): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(180,2): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(280,76): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(280,44): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(387,36): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(389,18): warning C4244: “初始化”: 从“__int64”转换到“float”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(390,24): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(412,67): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(412,42): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(413,67): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(413,42): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(415,23): warning C4305: “=”: 从“double”到“float”截断
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(702,10): warning C4244: “初始化”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(703,10): warning C4244: “初始化”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(710,20): warning C4244: “初始化”: 从“__int64”转换到“float”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(712,26): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(843,49): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(843,35): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(858,39): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(858,26): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(869,50): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
+D:\Git_project\CPlusPlus_Project\pvz\pvz.cpp(869,36): warning C4244: “参数”: 从“__int64”转换到“int”，可能丢失数据
   pvz.vcxproj -> D:\Git_project\CPlusPlus_Project\pvz\Debug\pvz.exe
