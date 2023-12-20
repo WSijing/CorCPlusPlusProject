@@ -1,21 +1,22 @@
-/*¿ª·¢ÈÕÖ¾
-* 1.ÊµÏÖ³õÊ¼½çÃæ
-* 2.ÊµÏÖÖ²Îï¿¨²Û
-* 3.ÊµÏÖÖ²ÎïµÄÑ¡È¡ºÍÍÏ¶¯
-* 4.ÊµÏÖÖ²ÎïµÄÖÖÖ²
-* 5.ÊµÏÖÖ²ÎïµÄÒ¡°Ú
-* 6.ÊµÏÖ²Ëµ¥½çÃæ
-* 7.ÊµÏÖËæ»úÑô¹âµôÂä
-* 8.ÊµÏÖÊÕ¼¯Ñô¹âºÍÏÔÊ¾Ñô¹âÖµ
-* 9.´´½¨½©Ê¬ºÍÊµÏÖÆäĞĞ×ß
-* 10.ÊµÏÖÑô¹âÇò·Éµ½Ñô¹â¼ÆÊıÆ÷µÄ¹ı³Ì
-* 11.ÊµÏÖÍã¶¹×Óµ¯µÄ·¢ÉäºÍäÖÈ¾
-* 12.ÊµÏÖÍã¶¹×Óµ¯Óë½©Ê¬µÄÅö×²¼ì²â
-* 13.ÊµÏÖ½©Ê¬ËÀÍö
-* 14.ÊµÏÖ½©Ê¬³ÔÖ²Îï
-* 15.ÊµÏÖÏòÈÕ¿ûÉú³ÉÑô¹â
-* 16.Æ¬Í·Ñ²³¡
-* 17.ÅĞ¶ÏÓÎÏ·½áÊø
+ï»¿/*å¼€å‘æ—¥å¿—
+* 1.å®ç°åˆå§‹ç•Œé¢
+* 2.å®ç°æ¤ç‰©å¡æ§½
+* 3.å®ç°æ¤ç‰©çš„é€‰å–å’Œæ‹–åŠ¨
+* 4.å®ç°æ¤ç‰©çš„ç§æ¤
+* 5.å®ç°æ¤ç‰©çš„æ‘‡æ‘†
+* 6.å®ç°èœå•ç•Œé¢
+* 7.å®ç°éšæœºé˜³å…‰æ‰è½
+* 8.å®ç°æ”¶é›†é˜³å…‰å’Œæ˜¾ç¤ºé˜³å…‰å€¼
+* 9.åˆ›å»ºåƒµå°¸å’Œå®ç°å…¶è¡Œèµ°
+* 10.å®ç°é˜³å…‰çƒé£åˆ°é˜³å…‰è®¡æ•°å™¨çš„è¿‡ç¨‹
+* 11.å®ç°è±Œè±†å­å¼¹çš„å‘å°„å’Œæ¸²æŸ“
+* 12.å®ç°è±Œè±†å­å¼¹ä¸åƒµå°¸çš„ç¢°æ’æ£€æµ‹
+* 13.å®ç°åƒµå°¸æ­»äº¡
+* 14.å®ç°åƒµå°¸åƒæ¤ç‰©
+* 15.å®ç°å‘æ—¥è‘µç”Ÿæˆé˜³å…‰
+* 16.ç‰‡å¤´å·¡åœº
+* 17.åˆ¤æ–­æ¸¸æˆç»“æŸ
+* 18.å¢åŠ æ¨±æ¡ƒç‚¸å¼¹
 */
 
 #include <stdio.h>
@@ -33,50 +34,51 @@
 #define WIN_HEIGHT 600
 #define ZOMBIE_MAX 10
 
-enum {WAN_DOU, XIANG_RI_KUI, ZHI_WU_COUNT};
+enum {WAN_DOU, XIANG_RI_KUI, YING_TAO_ZHA_DAN, ZHI_WU_COUNT};
 enum {SUNSHINE_DOWN, SUNSHINE_GROUND, SUNSHINE_COLLECT, SUNSHINE_PRODUCT};
 enum {GOING, WIN, FAIL};
 
 struct averageZhiwu {
-	int type; //Ö²ÎïÀàĞÍ 0£ºÎŞ 1£ºµÚÒ»ÖÖÖ²Îï
-	int frameIndex; //Ö¡ĞòºÅ
-	int deadTime; //ËÀÍö¼ÆÊ±Æ÷
+	int type; //æ¤ç‰©ç±»å‹ 0ï¼šæ—  1ï¼šç¬¬ä¸€ç§æ¤ç‰©
+	int frameIndex; //å¸§åºå·
+	int deadTime; //æ­»äº¡è®¡æ—¶å™¨
 
 	int timer;
 	int x, y;
-
+	
 	int shootTime;
-} map[5][9];
+} map[5][9] = { 0 };
 
 struct visualZhiwu {
-	int type; //Ö²ÎïÀàĞÍ 0£ºÎŞ 1£ºµÚÒ»ÖÖÖ²Îï
-	int x, y; //Êó±êÖ¸ÏòµÄÎ»ÖÃ
-} unmap[5][9], checkUnmap;
+	int type; //æ¤ç‰©ç±»å‹ 0ï¼šæ—  1ï¼šç¬¬ä¸€ç§æ¤ç‰©
+	int x, y; //é¼ æ ‡æŒ‡å‘çš„ä½ç½®
+} unmap[5][9] = { 0 }, checkUnmap = { 0 };
 
 struct sunshineBall {
-	int x, y; //Æ®Âä¹ı³ÌÖĞµÄÎ»ÖÃ
-	int frameIndex; //Ö¡ĞòºÅ
-	int destY; //ÂäµãÎ»ÖÃ
-	bool used; //ÊÇ·ñÊ¹ÓÃ¹ı£¬1£ºÎ´Ê¹ÓÃ¹ı 0£ºÊ¹ÓÃ¹ı
+	int x, y; //é£˜è½è¿‡ç¨‹ä¸­çš„ä½ç½®
+	int frameIndex; //å¸§åºå·
+	int destY; //è½ç‚¹ä½ç½®
+	bool used; //æ˜¯å¦ä½¿ç”¨è¿‡ï¼Œ1ï¼šæœªä½¿ç”¨è¿‡ 0ï¼šä½¿ç”¨è¿‡
 	int timer;
 
-	float t; //±´Èû¶ûÊ±¼äµã 0..1
+	float t; //è´å¡å°”æ—¶é—´ç‚¹ 0..1
 	vector2 p1, p2, p3, p4;
 	vector2 currentPresentation;
 	float speed;
 	int status;
-} balls[20];
+} balls[20] = { 0 };
 
 struct zombie {
 	int x, y;
 	int frameIndex;
 	bool used;
-	int speed;
+	double speed;
 	int row;
-	int blood; //½©Ê¬ÑªÁ¿
-	int dead; //´ı¿ª·¢
+	int blood; //åƒµå°¸è¡€é‡
+	bool dead;  //ä¸€èˆ¬æ­»äº¡
 	bool eating;
-} zombies[10];
+	bool boomDead; //å› ç°çƒ¬æ¤ç‰©è€Œæ­»äº¡
+} zombies[10] = { 0 };
 
 struct bullet {
 	int x, y;
@@ -85,27 +87,28 @@ struct bullet {
 	int row;
 	bool blast;
 	int frameIndex;
-} bullets[30];
+} bullets[30] = { 0 };
 
-IMAGE imgBackground; //±³¾°Í¼Æ¬
-IMAGE imgBar5; //Ö²Îï¿¨²Û
-IMAGE imgCards[ZHI_WU_COUNT]; //Ö²Îï¿¨ÅÆ
-IMAGE* imgZhiWu[ZHI_WU_COUNT][20]; //Ö²ÎïÖ¡Í¼
-IMAGE imgSunshineBall[29];
-IMAGE imgZombie[22];
-IMAGE imgBulletNormal;
-IMAGE imgBulletBlast[4];
-IMAGE imgZombieEating[21];
-IMAGE imgZombieStand[11];
-IMAGE imgZombieDead[10];
+IMAGE imgBackground = 0; //èƒŒæ™¯å›¾ç‰‡
+IMAGE imgBar5 = 0; //æ¤ç‰©å¡æ§½
+IMAGE imgBulletNormal = 0;
+IMAGE imgBulletBlast[4] = { 0 };
+IMAGE imgCards[ZHI_WU_COUNT] = { 0 }; //æ¤ç‰©å¡ç‰Œ
+IMAGE imgZombieDead[10] = { 0 };
+IMAGE imgZombieBoomDead[20] = { 0 };
+IMAGE imgZombieStand[11] = { 0 };
+IMAGE imgZombieEating[21] = { 0 };
+IMAGE imgZombie[22] = { 0 };
+IMAGE imgSunshineBall[29] = { 0 };
+IMAGE* imgZhiWu[ZHI_WU_COUNT][20] = { 0 }; //æ¤ç‰©å¸§å›¾
 
-int curX, curY; //µ±Ç°Ñ¡ÖĞÖ²ÎïÔÚÒÆ¶¯¹ı³ÌÖĞµÄÎ»ÖÃ
-int curZhiWu; //0£ºÎ´Ñ¡ÖĞ 1£ºÑ¡ÔñµÚÒ»ÖÖÖ²Îï
-bool firstDown = 0; // ÅĞ¶Ï×¥È¡»¹ÊÇ·ÅÏÂ
-int sunshine; //Ñô¹âÖµ
-int killCount; //ÒÑ»÷É±½©Ê¬Êı
-int zombieCount; //ÒÑ³öÏÖ½©Ê¬Êı
-int gameStatus; //ÓÎÏ·×´Ì¬
+int curX = 0, curY = 0; //å½“å‰é€‰ä¸­æ¤ç‰©åœ¨ç§»åŠ¨è¿‡ç¨‹ä¸­çš„ä½ç½®
+int curZhiWu = 0; //0ï¼šæœªé€‰ä¸­ 1ï¼šé€‰æ‹©ç¬¬ä¸€ç§æ¤ç‰©
+bool firstDown = 0; // åˆ¤æ–­æŠ“å–è¿˜æ˜¯æ”¾ä¸‹
+int sunshine = 50; //é˜³å…‰å€¼
+int killCount = 0; //å·²å‡»æ€åƒµå°¸æ•°
+int zombieCount = 0; //å·²å‡ºç°åƒµå°¸æ•°
+int gameStatus = GOING; //æ¸¸æˆçŠ¶æ€
 
 bool fileExist(const char* name) {
 	FILE* fp = fopen(name, "r");
@@ -119,11 +122,11 @@ bool fileExist(const char* name) {
 }
 
 void gameInit() {
-	//¼ÓÔØ±³¾°Í¼Æ¬
+	//åŠ è½½èƒŒæ™¯å›¾ç‰‡
 	loadimage(&imgBackground, "res/bg.jpg");
 	loadimage(&imgBar5, "res/bar5.png");
 
-	//³õÊ¼»¯Ö²ÎïÏà¹Ø×´Ì¬
+	//åˆå§‹åŒ–æ¤ç‰©ç›¸å…³çŠ¶æ€
 	memset(imgZhiWu, 0, sizeof(imgZhiWu));
 	memset(map, 0, sizeof(map));
 	memset(unmap, 0, sizeof(unmap));
@@ -132,19 +135,19 @@ void gameInit() {
 	zombieCount = 0;
 	gameStatus = GOING;
 
-	//´´½¨Ö²Îï¿¨ÅÆ
+	//åˆ›å»ºæ¤ç‰©å¡ç‰Œ
 	char name[64];
 
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
-		//Éú³ÉÖ²Îï¿¨ÅÆµÄÎÄ¼şÃû
+		//ç”Ÿæˆæ¤ç‰©å¡ç‰Œçš„æ–‡ä»¶å
 		sprintf_s(name, sizeof(name), "res/Cards/card_%d.png", i + 1);
 		loadimage(&imgCards[i], name);
 
-		//Éú³ÉÖ²ÎïÒ¡°ÚÖ¡Í¼µÄÎÄ¼şÃû
+		//ç”Ÿæˆæ¤ç‰©æ‘‡æ‘†å¸§å›¾çš„æ–‡ä»¶å
 		for (int j = 0; j < 20; j++) {
 			sprintf_s(name, sizeof(name), "res/zhiwu/%d/%d.png", i, j);
 
-			//ÅĞ¶ÏÎÄ¼şµÄ´æÔÚĞÔ
+			//åˆ¤æ–­æ–‡ä»¶çš„å­˜åœ¨æ€§
 			if (fileExist(name)) {
 				imgZhiWu[i][j] = new IMAGE;
 				loadimage(imgZhiWu[i][j], name);
@@ -155,8 +158,8 @@ void gameInit() {
 		}
 	}
 
-	curZhiWu = 0; //³õÊ¼»¯Ñ¡ÖĞÖ²Îï×´Ì¬
-	sunshine = 50; //³õÊ¼»¯Ñô¹âÖµ
+	curZhiWu = 0; //åˆå§‹åŒ–é€‰ä¸­æ¤ç‰©çŠ¶æ€
+	sunshine = 50; //åˆå§‹åŒ–é˜³å…‰å€¼
 
 	
 	memset(balls, 0, sizeof(balls));
@@ -166,54 +169,59 @@ void gameInit() {
 	}
 
 
-	//Ëæ»úÖÖ×Ó
+	//éšæœºç§å­
 	srand(time(NULL));
 
-	//´´½¨ÓÎÏ·Í¼ĞÎ´°¿Ú
+	//åˆ›å»ºæ¸¸æˆå›¾å½¢çª—å£
 	initgraph(WIN_WIDTH, WIN_HEIGHT, 1);
 
-	//ÉèÖÃ×ÖÌå
+	//è®¾ç½®å­—ä½“
 	LOGFONT font;
 	getfont(&font);
 	font.lfHeight = 30;
 	font.lfWeight = 15;
 	strcpy(font.lfFaceName, "Segoe UI Black");
-	font.lfQuality = ANTIALIASED_QUALITY; //¿¹¾â³İÖÊÁ¿
+	font.lfQuality = ANTIALIASED_QUALITY; //æŠ—é”¯é½¿è´¨é‡
 	settextstyle(&font);
 	setbkmode(TRANSPARENT);
 	setcolor(BLACK);
 
-	//³õÊ¼»¯½©Ê¬Êı¾İ
+	//åˆå§‹åŒ–åƒµå°¸æ•°æ®
 	memset(zombies, 0, sizeof(zombies));
 	for (int i = 0; i < 22; i++) {
 		sprintf_s(name, sizeof(name), "res/zm/%d.png", i + 1);
 		loadimage(&imgZombie[i], name);
 	}
 
-	//³õÊ¼»¯Íã¶¹×Óµ¯µÄÖ¡Í¼Æ¬Êı×é
+	//åˆå§‹åŒ–è±Œè±†å­å¼¹çš„å¸§å›¾ç‰‡æ•°ç»„
 	loadimage(&imgBulletNormal, "res/bullets/bullet_normal.png");
 	memset(bullets, 0, sizeof(bullets));
 
-	//³õÊ¼»¯Íã¶¹×Óµ¯µÄÆÆÁÑÖ¡Í¼Æ¬Êı×é
+	//åˆå§‹åŒ–è±Œè±†å­å¼¹çš„ç ´è£‚å¸§å›¾ç‰‡æ•°ç»„
 	loadimage(&imgBulletBlast[3], "res/bullets/bullet_blast.png");
 	for (int i = 0; i < 3; i++) {
 		float k = (i + 1) * 0.2;
 		loadimage(&imgBulletBlast[i], "res/bullets/bullet_blast.png", imgBulletBlast[3].getwidth() * k, imgBulletBlast[3].getheight() * k,1);
 	}
 
-	//³õÊ¼»¯½©Ê¬³ÔÖ²ÎïµÄÖ¡Í¼Æ¬Êı×é
+	//åˆå§‹åŒ–åƒµå°¸åƒæ¤ç‰©çš„å¸§å›¾ç‰‡æ•°ç»„
 	for (int i = 0; i < 21; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_eat/%d.png", i + 1);
 		loadimage(&imgZombieEating[i], name);
 	}
 
-	//³õÊ¼»¯½©Ê¬ËÀÍöµÄÖ¡Í¼Æ¬Êı×é
+	//åˆå§‹åŒ–åƒµå°¸æ­»äº¡çš„å¸§å›¾ç‰‡æ•°ç»„
 	for (int i = 0; i < 11; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_dead/%d.png", i + 1);
 		loadimage(&imgZombieDead[i], name);
 	}
 
-	//³õÊ¼»¯¿ª³¡½©Ê¬µÄÖ¡Í¼Æ¬Êı×é
+	//åˆå§‹åŒ–æ¤ç‰©å› ç°çƒ¬æ¤ç‰©æ­»äº¡çš„å¸§å›¾ç‰‡æ•°ç»„
+	for (int i = 0; i < 21; i++) {
+		sprintf_s(name, sizeof(name), "res/zm_dead2/%d.png", i + 1);
+		loadimage(&imgZombieBoomDead[i], name);
+	}
+	//åˆå§‹åŒ–å¼€åœºåƒµå°¸çš„å¸§å›¾ç‰‡æ•°ç»„
 	for (int i = 0; i < 11; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_stand/%d.png", i + 1);
 		loadimage(&imgZombieStand[i], name);
@@ -221,7 +229,7 @@ void gameInit() {
 }
 
 void drawCards() {
-	//Ö²Îï¿¨ÅÆÌî³ä¿¨²Û
+	//æ¤ç‰©å¡ç‰Œå¡«å……å¡æ§½
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
 		int x = 268 - 112 + i * 65;
 		int y = 6;
@@ -230,7 +238,7 @@ void drawCards() {
 }
 
 void drawPlant() {
-	//Ò»Ö¡Ò»Ö¡Êä³ö£¬ÊµÏÖÖ²ÎïÒ¡°Ú
+	//ä¸€å¸§ä¸€å¸§è¾“å‡ºï¼Œå®ç°æ¤ç‰©æ‘‡æ‘†
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
@@ -239,12 +247,18 @@ void drawPlant() {
 				if (!index) {
 					index++;
 				}
-				putimagePNG(map[i][j].x, map[i][j].y + 15, imgZhiWu[zhiWuType][index]);
+				if(map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 8)
+					putimagePNG(map[i][j].x - 70, map[i][j].y + 15 - 70, imgZhiWu[zhiWuType][index]);
+				else
+					putimagePNG(map[i][j].x, map[i][j].y + 15, imgZhiWu[zhiWuType][index]);
+			}
+			if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 19) {
+				map[i][j].type = 0;
 			}
 		}
 	}
 
-	//äÖÈ¾ÍÏ¶¯¹ı³ÌµÄÖ²Îï
+	//æ¸²æŸ“æ‹–åŠ¨è¿‡ç¨‹çš„æ¤ç‰©
 	if (curZhiWu) {
 		bool changeFlag = 1;
 		for (int i = 0; i < 5; i++) {
@@ -281,7 +295,7 @@ void drawSunshine() {
 		}
 	}
 
-	//ÏÔÊ¾Ñô¹âÖµ
+	//æ˜¾ç¤ºé˜³å…‰å€¼
 	char scoreText[8];
 	sprintf_s(scoreText, sizeof(scoreText), "%d", sunshine);
 	int textX = 220 - 112, tmp = sunshine;
@@ -300,6 +314,9 @@ void drawZombie() {
 			if (zombies[i].dead) {
 				img = imgZombieDead;
 			}
+			else if (zombies[i].boomDead) {
+				img = imgZombieBoomDead;
+			}
 			else if (zombies[i].eating) {
 				img = imgZombieEating;
 			}
@@ -307,7 +324,12 @@ void drawZombie() {
 				img = imgZombie;
 			}
 			img += zombies[i].frameIndex;
-
+			// ç”¨äºâ€œç©ç©å°æ¸¸æˆâ€
+			//for (int j = 0; j < 10; j++) {
+			//	if (img == &imgZombieDead[j]) {
+			//		putimagePNG(zombies[i].x, zombies[i].y - 144, img);
+			//	}
+			//}
 			putimagePNG(zombies[i].x, zombies[i].y - 144, img);
 		}
 	}
@@ -329,9 +351,9 @@ void drawBullet() {
 }
 
 void updateWindow() {
-	BeginBatchDraw(); //¿ªÊ¼»º³å
+	BeginBatchDraw(); //å¼€å§‹ç¼“å†²
 	
-	//ÏÔÊ¾ÓÎÏ·±³¾°ºÍÖ²Îï¿¨²Û
+	//æ˜¾ç¤ºæ¸¸æˆèƒŒæ™¯å’Œæ¤ç‰©å¡æ§½
 	putimage(-112, 15, &imgBackground);
 	putimagePNG(180 - 112, 0, &imgBar5);
 
@@ -341,7 +363,7 @@ void updateWindow() {
 	drawBullet();
 	drawSunshine();
 
-	EndBatchDraw(); //½áÊø»º³å
+	EndBatchDraw(); //ç»“æŸç¼“å†²
 }
 
 void updatePlant() {
@@ -349,7 +371,7 @@ void updatePlant() {
 	if (++count < 3) return;
 	count = 0;
 
-	//¸üĞÂÒ¡°ÚÖ¡
+	//æ›´æ–°æ‘‡æ‘†å¸§
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
@@ -372,7 +394,7 @@ void createSunshine() {
 		fre = 500 + rand() % 75;
 		count = 0;
 
-		//´ÓÑô¹â³ØÖĞÈ¡Ò»¸ö¿ÉÓÃÑô¹â
+		//ä»é˜³å…‰æ± ä¸­å–ä¸€ä¸ªå¯ç”¨é˜³å…‰
 		int ballMax = sizeof(balls) / sizeof(balls[0]);
 		int i = 0;
 		while (i < ballMax && balls[i].used) i++;
@@ -390,7 +412,7 @@ void createSunshine() {
 		balls[i].speed = 1.5 / (distance / off);
 	}
 
-	//ÏòÈÕ¿ûÉú²úÑô¹â
+	//å‘æ—¥è‘µç”Ÿäº§é˜³å…‰
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
@@ -453,7 +475,7 @@ void updateSunshine() {
 			}
 		}
 		else if (balls[i].status == SUNSHINE_COLLECT) {
-			//ÅäÖÃÒôÀÖ
+			//é…ç½®éŸ³ä¹
 			mciSendString("play res/sunshine.mp3", 0, 0, 0);
 
 			struct sunshineBall* sun = &balls[i];
@@ -489,7 +511,7 @@ void createZombie() {
 			zombies[i].x = WIN_WIDTH;
 			zombies[i].row = rand() % 5;
 			zombies[i].y = 77 + (1 + zombies[i].row) * 102;
-			zombies[i].speed = 1;
+			zombies[i].speed = (100 + rand() % 50) / 100;
 			zombies[i].blood = 100;
 			zombies[i].dead = 0;
 			zombieCount++;
@@ -504,9 +526,9 @@ void updateZombie() {
 	count1++;
 	if (count1 > 2) {
 		count1 = 0;
-		//¸üĞÂ½©Ê¬Î»ÖÃ
+		//æ›´æ–°åƒµå°¸ä½ç½®
 		for (int i = 0; i < zombieMax; i++) {
-			if (zombies[i].used) {
+			if (zombies[i].used && zombies[i].dead == 0 && zombies[i].boomDead == 0) {
 				zombies[i].x -= zombies[i].speed;
 				if (zombies[i].x < 56) {
 					gameStatus = FAIL;
@@ -521,9 +543,10 @@ void updateZombie() {
 		count2 = 0;
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used) {
-				if (zombies[i].dead) {
+				if (zombies[i].dead || zombies[i].boomDead) {
 					zombies[i].frameIndex++;
-					if (zombies[i].frameIndex > 11) {	//Èç¹û½©Ê¬ËÀÍö¾ÍÔö¼ÓËÀÍöµÄÖ¡Êı£¬²¢ÔÚ¼ÓÍêÖ®ºóÉ¾³ı½©Ê¬
+					//å¦‚æœåƒµå°¸æ­»äº¡å°±å¢åŠ æ­»äº¡çš„å¸§æ•°ï¼Œå¹¶åœ¨åŠ å®Œä¹‹ååˆ é™¤åƒµå°¸
+					if ((zombies[i].dead == 1 && zombies[i].frameIndex > 11) || (zombies[i].boomDead == 1 && zombies[i].frameIndex > 21)) {
 						zombies[i].used = 0;
 						killCount++;
 						if (killCount == ZOMBIE_MAX) {
@@ -552,6 +575,8 @@ void shoot() {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
 	int dangerX = WIN_WIDTH - 30;
+
+	// åˆ¤æ–­åƒµå°¸æ‰€åœ¨çš„è¡Œ
 	for (int i = 0; i < zombieMax; i++) {
 		if (zombies[i].used && zombies[i].x < dangerX) {
 			lines[zombies[i].row] = 1;
@@ -566,13 +591,13 @@ void shoot() {
 						map[i][j].shootTime++;
 						if (map[i][j].shootTime > 20) {
 							map[i][j].shootTime = 0;
-
 							int k = 0;
+						
 							for (k = 0; k < bulletMax && bullets[k].used; k++);
 							if (k < bulletMax) {
 								bullets[k].used = 1;
 								bullets[k].row = i;
-								bullets[k].speed = 14;
+								bullets[k].speed = 24;
 
 								bullets[k].blast = 0;
 								bullets[k].frameIndex = 0;
@@ -626,7 +651,7 @@ void bullet2Zombie() {
 			int x1 = zombies[j].x + 80;
 			int x2 = zombies[j].x + 110;
 			int x = bullets[i].x;
-			if (bullets[i].row == zombies[j].row && x > x1 && x < x2) {
+			if (bullets[i].row == zombies[j].row && x > x1 && x < x2 && zombies[j].dead == 0) {
 				zombies[j].blood -= 10;
 				bullets[i].blast = 1;
 				bullets[i].speed = 0;
@@ -657,14 +682,15 @@ void zombie2Plant() {
 				zombies[i].eating = 1;
 				zombies[i].speed = 0;
 				for (int k = 0; k < zombieMax; k++) {
-					if (zombies[k].eating) {
+					//æ¤ç‰©è¢«å•ƒé£Ÿæ—¶è¿›è¡Œæ­»äº¡å€’è®¡æ—¶ï¼Œç°çƒ¬æ¤ç‰©é»˜è®¤æ— æ•Œ
+					if (zombies[k].eating && map[row][j].type != YING_TAO_ZHA_DAN + 1) {
 						map[row][j].deadTime++;
 					}
 					if (map[row][j].deadTime > 100) {
 						map[row][j].deadTime = 0;
 						map[row][j].type = 0;
 						zombies[i].eating = 0;
-						zombies[i].speed = 1;
+						zombies[i].speed = (100 + rand() % 50) / 100;
 					}
 				}
 			}
@@ -677,19 +703,41 @@ void collisionCheck() {
 	zombie2Plant();
 }
 
+void updateNearbyZombies(int boomX, int boomY) {
+	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
+	for (int i = 0; i < zombieMax; i++) {
+		if (zombies[i].used) {
+			if (abs(zombies[i].x - boomX) <= 100 && abs(zombies[i].y - boomY) <= 110) {
+				zombies[i].boomDead = 1;
+			}
+		}
+	}
+}
+
+void boom() {
+	for (int i = 0; i < 5; i++) {
+		for (int j = 0; j < 9; j++) {
+			if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex == 8) {
+				updateNearbyZombies(map[i][j].x - 60, map[i][j].y + 102);
+			}
+		}
+	}
+}
+
 void updateGame() {
 	updatePlant();
 
-	createSunshine(); //´´½¨Ñô¹â
-	updateSunshine(); //¸üĞÂÑô¹âµÄ×´Ì¬
+	createSunshine(); //åˆ›å»ºé˜³å…‰
+	updateSunshine(); //æ›´æ–°é˜³å…‰çš„çŠ¶æ€
 
-	createZombie(); //´´½¨½©Ê¬
-	updateZombie(); //¸üĞÂ½©Ê¬µÄ×´Ì¬
+	createZombie(); //åˆ›å»ºåƒµå°¸
+	updateZombie(); //æ›´æ–°åƒµå°¸çš„çŠ¶æ€
 
-	shoot(); //·¢ÉäÍã¶¹×Óµ¯
-	updateBullets(); //¸üĞÂÍã¶¹×Óµ¯
-	collisionCheck(); //Åö×²¼ì²â
+	shoot(); //å‘å°„è±Œè±†å­å¼¹
+	updateBullets(); //æ›´æ–°è±Œè±†å­å¼¹
+	collisionCheck(); //ç¢°æ’æ£€æµ‹
 
+	boom(); //æ¨±æ¡ƒç‚¸å¼¹çˆ†ç‚¸
 }
 
 void collectSunshine(ExMessage* msg) {
@@ -712,7 +760,7 @@ void collectSunshine(ExMessage* msg) {
 				balls[i].speed = 3.0 / (distance / off);
 
 
-				//ÉèÖÃÑô¹âÖµ×î´óÖµ
+				//è®¾ç½®é˜³å…‰å€¼æœ€å¤§å€¼
 				if (sunshine >= 9999) {
 					sunshine = 9999;
 				}
@@ -728,7 +776,7 @@ void userClick() {
 
 	if (peekmessage(&msg)) {
 		int mmm = 87;
-		//ÊµÏÖÖ²ÎïµÄÑ¡È¡ºÍÈ¡ÏûÑ¡È¡
+		//å®ç°æ¤ç‰©çš„é€‰å–å’Œå–æ¶ˆé€‰å–
 		if (msg.message == WM_LBUTTONDOWN && firstDown == 0) {
 			if (msg.x > 268 - 112 && msg.x < 268 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
 				int index = (msg.x - 268 + 112) / 65;
@@ -783,7 +831,7 @@ void startUI() {
 	IMAGE imgBackground, imgMenu[9];
 	char name[64];
 
-	//¼ÓÔØ²Ëµ¥½çÃæ¸÷ÔªËØÍ¼Æ¬
+	//åŠ è½½èœå•ç•Œé¢å„å…ƒç´ å›¾ç‰‡
 	loadimage(&imgBackground, "res/menu.png");
 	for (int i = 1; i <= 8; i++) {
 		sprintf_s(name, sizeof(name), "res/menu%d.png", i);
@@ -796,7 +844,7 @@ void startUI() {
 
 		putimage(0, 0, &imgBackground);
 
-		//ÊµÏÖµ¥»÷¸ßÁÁºÍ½çÃæÌø×ª
+		//å®ç°å•å‡»é«˜äº®å’Œç•Œé¢è·³è½¬
 		for (int i = 1; i <= 4; i++) {
 			putimagePNG(474, -30 + i * 90, flag[i] ? imgMenu + 2 * i : imgMenu + 2 * i - 1);
 		}
@@ -836,7 +884,7 @@ void viewScene() {
 	int count = 0;
 	for (int x = 0; x >= xMin; x -= 2) {
 		BeginBatchDraw();
-		putimage(x, 0, &imgBackground);
+		putimage(x, 15, &imgBackground);
 
 		count++;
 		for (int k = 0; k < 9; k++) {
@@ -849,11 +897,11 @@ void viewScene() {
 		EndBatchDraw();
 		Sleep(5);
 
-		//Í£ÁôÒ»Ãë×óÓÒ
+		//åœç•™ä¸€ç§’å·¦å³
 		for (int i = 0; i < 100; i++) {
 			BeginBatchDraw();
 
-			putimage(xMin, 0, &imgBackground);
+			putimage(xMin, 15, &imgBackground);
 			for (int k = 0; k < 9; k++) {
 				putimagePNG(points[k].x, points[k].y, &imgZombieStand[index[k]]);
 				index[k] = (index[k] + 1) % 11;
@@ -863,7 +911,7 @@ void viewScene() {
 		}
 		for (int x = xMin; x <= -112; x += 2) {
 			BeginBatchDraw();
-			putimage(x, 0, &imgBackground);
+			putimage(x, 15, &imgBackground);
 			count++;
 			for (int k = 0; k < 9; k++) {
 				putimagePNG(points[k].x - xMin + x, points[k].y, &imgZombieStand[index[k]]);
@@ -920,7 +968,7 @@ int main() {
 	int timer = 0;
 	while (1) {
 		userClick();
-		//ÑÓ³ÙÊä³ö£¬¼õ»º¸üĞÂËÙ¶È
+		//å»¶è¿Ÿè¾“å‡ºï¼Œå‡ç¼“æ›´æ–°é€Ÿåº¦
 		timer += getDelay();
 		if (timer > 30) {
 			timer = 0;
