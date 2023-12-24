@@ -17,6 +17,8 @@
 * 16.片头巡场
 * 17.判断游戏结束
 * 18.增加樱桃炸弹
+* 19.为植物增加阳光消耗和冷却时间
+* 20.增加铲子
 */
 
 #include <stdio.h>
@@ -89,11 +91,18 @@ struct bullet {
 	int frameIndex;
 } bullets[30] = { 0 };
 
+struct judge {
+	int type;			//种类
+	bool able;		//是否可选
+	int cost;			//购买所需阳光
+	int CD;				//冷却时间
+} cards[ZHI_WU_COUNT];
+
 IMAGE imgBackground = 0; //背景图片
 IMAGE imgBar5 = 0; //植物卡槽
 IMAGE imgBulletNormal = 0;
 IMAGE imgBulletBlast[4] = { 0 };
-IMAGE imgCards[ZHI_WU_COUNT] = { 0 }; //植物卡牌
+IMAGE imgCards[ZHI_WU_COUNT], imgCardsBlack[ZHI_WU_COUNT]; //植物卡牌可选和不可选
 IMAGE imgZombieDead[10] = { 0 };
 IMAGE imgZombieBoomDead[20] = { 0 };
 IMAGE imgZombieStand[11] = { 0 };
@@ -101,6 +110,7 @@ IMAGE imgZombieEating[21] = { 0 };
 IMAGE imgZombie[22] = { 0 };
 IMAGE imgSunshineBall[29] = { 0 };
 IMAGE* imgZhiWu[ZHI_WU_COUNT][20] = { 0 }; //植物帧图
+IMAGE imgShovel, imgShovelSlot;
 
 int curX = 0, curY = 0; //当前选中植物在移动过程中的位置
 int curZhiWu = 0; //0：未选中 1：选择第一种植物
@@ -109,6 +119,7 @@ int sunshine = 50; //阳光值
 int killCount = 0; //已击杀僵尸数
 int zombieCount = 0; //已出现僵尸数
 int gameStatus = GOING; //游戏状态
+bool curShovel = 0; //判断铲子状态
 
 bool fileExist(const char* name) {
 	FILE* fp = fopen(name, "r");
@@ -130,18 +141,21 @@ void gameInit() {
 	memset(imgZhiWu, 0, sizeof(imgZhiWu));
 	memset(map, 0, sizeof(map));
 	memset(unmap, 0, sizeof(unmap));
+	memset(cards, 0, sizeof(cards));
 
 	killCount = 0;
 	zombieCount = 0;
 	gameStatus = GOING;
 
-	//创建植物卡牌
 	char name[64];
 
+	//创建植物卡牌
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
 		//生成植物卡牌的文件名
-		sprintf_s(name, sizeof(name), "res/Cards/card_%d.png", i + 1);
+		sprintf_s(name, sizeof(name), "res/Cards/card_%d.png", i + 1);   //加载正常卡牌
 		loadimage(&imgCards[i], name);
+		sprintf_s(name, sizeof(name), "res/Cards_Black/card_%d.png", i + 1);	//加载黑白卡牌（阳光不足或没冷却好）
+		loadimage(&imgCardsBlack[i], name);
 
 		//生成植物摇摆帧图的文件名
 		for (int j = 0; j < 20; j++) {
@@ -156,6 +170,17 @@ void gameInit() {
 				break;
 			}
 		}
+	}
+
+	//卡槽状态设置
+	for (int i = 0; i < ZHI_WU_COUNT; i++) {
+		cards[i].type = i;
+		if (cards[i].type == WAN_DOU)
+			cards[i].cost = 100;
+		else if (cards[i].type == XIANG_RI_KUI)
+			cards[i].cost = 50;
+		else if (cards[i].type == YING_TAO_ZHA_DAN)
+			cards[i].cost = 150;
 	}
 
 	curZhiWu = 0; //初始化选中植物状态
@@ -221,11 +246,18 @@ void gameInit() {
 		sprintf_s(name, sizeof(name), "res/zm_dead2/%d.png", i + 1);
 		loadimage(&imgZombieBoomDead[i], name);
 	}
+
 	//初始化开场僵尸的帧图片数组
 	for (int i = 0; i < 11; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_stand/%d.png", i + 1);
 		loadimage(&imgZombieStand[i], name);
 	}
+
+	//初始化铲子图片
+	sprintf_s(name, sizeof(name), "res/Shovel/shovel.png");
+	loadimage(&imgShovel, name);
+	sprintf_s(name, sizeof(name), "res/Shovel/shovelSlot.png");
+	loadimage(&imgShovelSlot, name);
 }
 
 void drawCards() {
@@ -233,7 +265,10 @@ void drawCards() {
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
 		int x = 268 - 112 + i * 65;
 		int y = 6;
-		putimage(x, y, &imgCards[i]);
+		if (cards[i].able) {
+			putimage(x, y, &imgCards[i]);
+		}
+		else putimage(x, y, &imgCardsBlack[i]);
 	}
 }
 
@@ -350,18 +385,27 @@ void drawBullet() {
 	}
 }
 
+void drawShovel() {
+	if (curShovel) {
+		putimagePNG(curX - imgShovel.getwidth() / 2, curY - imgShovel.getheight() / 2, &imgShovel);
+	}
+	else putimagePNG(685, 5, &imgShovel);
+}
+
 void updateWindow() {
 	BeginBatchDraw(); //开始缓冲
 	
 	//显示游戏背景和植物卡槽
 	putimage(-112, 15, &imgBackground);
 	putimagePNG(180 - 112, 0, &imgBar5);
+	putimagePNG(680, -5, &imgShovelSlot);
 
 	drawCards();
 	drawPlant();
 	drawZombie();
 	drawBullet();
 	drawSunshine();
+	drawShovel();
 
 	EndBatchDraw(); //结束缓冲
 }
@@ -370,6 +414,21 @@ void updatePlant() {
 	static int count = 0;
 	if (++count < 3) return;
 	count = 0;
+
+	//判断阳光数是否足以购买植物以及卡牌是否冷却完毕
+	for (int i = 0; i < ZHI_WU_COUNT; i++) {
+		if (cards[i].CD == 0) {
+			cards[i].able = 1;
+			if (sunshine >= cards[i].cost)
+				cards[i].able = 1;
+			else
+				cards[i].able = 0;
+		}
+		else {
+			cards[i].able = 0;
+			cards[i].CD--;
+		}
+	}
 
 	//更新摇摆帧
 	for (int i = 0; i < 5; i++) {
@@ -530,7 +589,7 @@ void updateZombie() {
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used && zombies[i].dead == 0 && zombies[i].boomDead == 0) {
 				zombies[i].x -= zombies[i].speed;
-				if (zombies[i].x < 56) {
+				if (zombies[i].x < 50) {
 					gameStatus = FAIL;
 				}
 			}
@@ -546,7 +605,7 @@ void updateZombie() {
 				if (zombies[i].dead || zombies[i].boomDead) {
 					zombies[i].frameIndex++;
 					//如果僵尸死亡就增加死亡的帧数，并在加完之后删除僵尸
-					if ((zombies[i].dead == 1 && zombies[i].frameIndex > 11) || (zombies[i].boomDead == 1 && zombies[i].frameIndex > 21)) {
+					if ((zombies[i].dead == 1 && zombies[i].frameIndex >= 11) || (zombies[i].boomDead == 1 && zombies[i].frameIndex > 21)) {
 						zombies[i].used = 0;
 						killCount++;
 						if (killCount == ZOMBIE_MAX) {
@@ -558,7 +617,7 @@ void updateZombie() {
 					zombies[i].frameIndex = (zombies[i].frameIndex + 1) % 21;
 				}
 				else {
-					zombies[i].frameIndex = (zombies[i].frameIndex + 1) % 22;
+					zombies[i].frameIndex = zombies[i].frameIndex % 21 + 1;
 				}
 			}
 		}
@@ -574,7 +633,7 @@ void shoot() {
 	int lines[5] = { 0 };
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
-	int dangerX = WIN_WIDTH - 30;
+	int dangerX = WIN_WIDTH - 50;
 
 	// 判断僵尸所在的行
 	for (int i = 0; i < zombieMax; i++) {
@@ -707,7 +766,7 @@ void updateNearbyZombies(int boomX, int boomY) {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	for (int i = 0; i < zombieMax; i++) {
 		if (zombies[i].used) {
-			if (abs(zombies[i].x - boomX) <= 100 && abs(zombies[i].y - boomY) <= 110) {
+			if (abs(zombies[i].x - boomX) <= 110 && abs(zombies[i].y - boomY) <= 110) {
 				zombies[i].boomDead = 1;
 			}
 		}
@@ -772,30 +831,34 @@ void collectSunshine(ExMessage* msg) {
 
 void userClick() {
 	ExMessage msg;
-	static int status = 0;
 
 	if (peekmessage(&msg)) {
-		int mmm = 87;
 		//实现植物的选取和取消选取
 		if (msg.message == WM_LBUTTONDOWN && firstDown == 0) {
-			if (msg.x > 268 - 112 && msg.x < 268 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) {
+			if (msg.x > 268 - 112 && msg.x < 268 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) { //点击植物卡牌
 				int index = (msg.x - 268 + 112) / 65;
-				status = 1;
-				curZhiWu = index + 1;
+				if (cards[index].able) {
+					curZhiWu = index + 1;
+
+					firstDown = 1;
+					curX = msg.x;
+					curY = msg.y;
+				}
+			}
+			else if(msg.x > 680 && msg.x < 680 + 90 && msg.y < 95){ //点击铲子
+				curShovel = 1;
 				firstDown = 1;
 				curX = msg.x;
 				curY = msg.y;
 			}
-			else {
-				collectSunshine(&msg);
-			}
+			else collectSunshine(&msg); //收集阳光
 		}
 		else if (msg.message == WM_RBUTTONDOWN && firstDown == 1) {
 			firstDown = 0;
 			curZhiWu = 0;
-			status = 0;
+			curShovel = 0;
 		}
-		else if (msg.message == WM_MOUSEMOVE && status == 1) {
+		else if (msg.message == WM_MOUSEMOVE && (curZhiWu || curShovel)) {
 			curX = msg.x;
 			curY = msg.y;
 
@@ -810,18 +873,33 @@ void userClick() {
 				int row = (msg.y - 77) / 102;
 				int col = (msg.x - 256 + 112) / 81;
 
-				if (map[row][col].type == 0) {
+				if (map[row][col].type == 0 && curZhiWu) { //种下植物
+					map[row][col].x = 256 - 112 + col * 81;
+					map[row][col].y = 77 + row * 102;
 					map[row][col].type = curZhiWu;
 					map[row][col].frameIndex = 0;
 					map[row][col].shootTime = 0;
 
-					map[row][col].x = 256 - 112 + col * 81;
-					map[row][col].y = 77 + row * 102;
+					//根据所种植的植物更新特殊状态和CD
+					if (map[row][col].type == YING_TAO_ZHA_DAN + 1) {
+						cards[YING_TAO_ZHA_DAN].CD = 500;
+					}
+					else if (map[row][col].type == WAN_DOU + 1) {
+						cards[WAN_DOU].CD = 200;
+					}
+					else if (map[row][col].type == XIANG_RI_KUI + 1) {
+						cards[XIANG_RI_KUI].CD = 200;
+					}
+
+					sunshine -= cards[curZhiWu - 1].cost;
+				}
+				else if (map[row][col].type && curShovel) { //铲掉植物
+					map[row][col].type = 0;
+					curShovel = 0;
 				}
 
 				firstDown = 0;
 				curZhiWu = 0;
-				status = 0;
 			}
 		}
 	}
