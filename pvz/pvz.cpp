@@ -63,10 +63,10 @@ struct sunshineBall {
 	bool used; //是否使用过，1：未使用过 0：使用过
 	int timer;
 
-	float t; //贝塞尔时间点 0..1
+	double t; //贝塞尔时间点 0..1
 	vector2 p1, p2, p3, p4;
 	vector2 currentPresentation;
-	float speed;
+	double speed;
 	int status;
 } balls[20] = { 0 };
 
@@ -98,6 +98,13 @@ struct judge {
 	int CD;				//冷却时间
 } cards[ZHI_WU_COUNT];
 
+struct car {
+	bool cue; //判断小车是否被触发
+	bool exist; //判断小车是否存在 0：存在 1：不存在
+	int x, y;
+	double speed;
+} cars[5];
+
 IMAGE imgBackground = 0; //背景图片
 IMAGE imgBar5 = 0; //植物卡槽
 IMAGE imgBulletNormal = 0;
@@ -111,6 +118,7 @@ IMAGE imgZombie[22] = { 0 };
 IMAGE imgSunshineBall[29] = { 0 };
 IMAGE* imgZhiWu[ZHI_WU_COUNT][20] = { 0 }; //植物帧图
 IMAGE imgShovel, imgShovelSlot;
+IMAGE imgCar;
 
 int curX = 0, curY = 0; //当前选中植物在移动过程中的位置
 int curZhiWu = 0; //0：未选中 1：选择第一种植物
@@ -225,7 +233,7 @@ void gameInit() {
 	//初始化豌豆子弹的破裂帧图片数组
 	loadimage(&imgBulletBlast[3], "res/bullets/bullet_blast.png");
 	for (int i = 0; i < 3; i++) {
-		float k = (i + 1) * 0.2;
+		double k = (i + 1) * 0.2;
 		loadimage(&imgBulletBlast[i], "res/bullets/bullet_blast.png", imgBulletBlast[3].getwidth() * k, imgBulletBlast[3].getheight() * k,1);
 	}
 
@@ -258,6 +266,19 @@ void gameInit() {
 	loadimage(&imgShovel, name);
 	sprintf_s(name, sizeof(name), "res/Shovel/shovelSlot.png");
 	loadimage(&imgShovelSlot, name);
+
+	//初始化小车图片
+	sprintf_s(name, sizeof(name), "res/car.png");
+	loadimage(&imgCar, name);
+
+	//小车状态设置
+	for (int i = 0; i < 5; i++) {
+		cars[i].exist = 1;
+		cars[i].cue = 0;
+		cars[i].x = 70;
+		cars[i].y = (i + 1) * 102 + 15;
+		cars[i].speed = 0;
+	}
 }
 
 void drawCards() {
@@ -324,7 +345,11 @@ void drawPlant() {
 void drawSunshine() {
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
 	for (int i = 0; i < ballMax; i++) {
-		if(balls[i].used || balls[i].status == SUNSHINE_COLLECT) {
+		if(balls[i].used) {
+			IMAGE* img = &imgSunshineBall[balls[i].frameIndex];
+			putimagePNG(balls[i].currentPresentation.x, balls[i].currentPresentation.y, img);
+		}
+		if (balls[i].status == SUNSHINE_COLLECT) {
 			IMAGE* img = &imgSunshineBall[balls[i].frameIndex];
 			putimagePNG(balls[i].currentPresentation.x, balls[i].currentPresentation.y, img);
 		}
@@ -387,9 +412,17 @@ void drawBullet() {
 
 void drawShovel() {
 	if (curShovel) {
-		putimagePNG(curX - imgShovel.getwidth() / 2, curY - imgShovel.getheight() / 2, &imgShovel);
+		putimagePNG(curX - 5, curY - imgShovel.getheight() + 5, &imgShovel);
 	}
 	else putimagePNG(685, 5, &imgShovel);
+}
+
+void drawCar() {
+	for (int i = 0; i < 5; i++) {
+		if (cars[i].exist) {
+			putimagePNG(cars[i].x, cars[i].y, &imgCar);
+		}
+	}
 }
 
 void updateWindow() {
@@ -406,6 +439,7 @@ void updateWindow() {
 	drawBullet();
 	drawSunshine();
 	drawShovel();
+	drawCar();
 
 	EndBatchDraw(); //结束缓冲
 }
@@ -466,8 +500,8 @@ void createSunshine() {
 		balls[i].t = 0;
 		balls[i].p1 = vector2(260 - 112 + rand() % (900 - 260), 60);
 		balls[i].p4 = vector2(balls[i].p1.x, 200 + (rand() % 4) * 90);
-		float off = 2.0;
-		float distance = balls[i].p4.y - balls[i].p1.y;
+		double off = 2.0;
+		double distance = balls[i].p4.y - balls[i].p1.y;
 		balls[i].speed = 1.5 / (distance / off);
 	}
 
@@ -554,12 +588,12 @@ void createZombie() {
 		return;
 	}
 
-	static int zombieFrequence = 300;
+	static int zombieFrequence = 500;
 	static int count = 0;
 	count++;
 	if (count > zombieFrequence) {
 		count = 0;
-		zombieFrequence = 500 + rand() % 200;
+		zombieFrequence = 300 + rand() % 200;
 
 		int i;
 		int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
@@ -589,8 +623,13 @@ void updateZombie() {
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used && zombies[i].dead == 0 && zombies[i].boomDead == 0) {
 				zombies[i].x -= zombies[i].speed;
-				if (zombies[i].x < 50) {
-					gameStatus = FAIL;
+				if (zombies[i].x < 60) {
+					if (zombies[i].x < 44 && cars[zombies[i].row].exist == 0) {
+						gameStatus = FAIL;
+					}
+					else {
+						cars[zombies[i].row].cue = 1;
+					}
 				}
 			}
 		}
@@ -608,9 +647,6 @@ void updateZombie() {
 					if ((zombies[i].dead == 1 && zombies[i].frameIndex >= 11) || (zombies[i].boomDead == 1 && zombies[i].frameIndex > 21)) {
 						zombies[i].used = 0;
 						killCount++;
-						if (killCount == ZOMBIE_MAX) {
-							gameStatus = WIN;
-						}
 					}
 				}
 				else if (zombies[i].eating) {
@@ -727,8 +763,8 @@ void bullet2Zombie() {
 
 void zombie2Plant() {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
-	for (int i = 0; i < zombieMax; i++) {
 
+	for (int i = 0; i < zombieMax; i++) {
 		int row = zombies[i].row;
 
 		for (int j = 0; j < 9; j++) {
@@ -757,9 +793,29 @@ void zombie2Plant() {
 	}
 }
 
+void car2Zombie() {
+	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
+
+	for (int i = 0; i < 5; i++) {
+		if (cars[i].cue) {
+			int x = cars[i].x + 60;
+			
+			for (int j = 0; j < zombieMax; j++) {
+				int x1 = zombies[j].x + 80;
+				int x2 = zombies[j].x + 100;
+				if (zombies[j].row == i && x >= x1 && x <= x2) {
+					zombies[j].dead = 1;
+					zombies[j].speed = 0;
+				}
+			}
+		}
+	}
+}
+
 void collisionCheck() {
 	bullet2Zombie();
 	zombie2Plant();
+	car2Zombie();
 }
 
 void updateNearbyZombies(int boomX, int boomY) {
@@ -783,8 +839,34 @@ void boom() {
 	}
 }
 
+void updateCars() {
+	for (int i = 0; i < 5; i++) {
+		if (cars[i].exist && cars[i].cue) {
+			cars[i].speed = 10;
+			cars[i].x += cars[i].speed;
+			if (cars[i].x > WIN_WIDTH) {
+				cars[i].exist = 0;
+				cars[i].cue = 0;
+			}
+		}
+	}
+}
+
+void judgeWin() {
+	if (killCount == ZOMBIE_MAX) {
+		int j = 0;
+		//确保小车全部跑完，xixi~~~
+		for (j = 0; j < 5; j++) {
+			if (cars[j].cue) break;
+		}
+		if (j == 5) {
+			gameStatus = WIN;
+		}
+	}
+}
+
 void updateGame() {
-	updatePlant();
+	updatePlant(); //更新植物状态
 
 	createSunshine(); //创建阳光
 	updateSunshine(); //更新阳光的状态
@@ -794,9 +876,14 @@ void updateGame() {
 
 	shoot(); //发射豌豆子弹
 	updateBullets(); //更新豌豆子弹
-	collisionCheck(); //碰撞检测
 
 	boom(); //樱桃炸弹爆炸
+
+	updateCars(); //更新小车状态
+
+	collisionCheck(); //碰撞检测
+
+	judgeWin(); //判断游戏结束
 }
 
 void collectSunshine(ExMessage* msg) {
@@ -814,8 +901,8 @@ void collectSunshine(ExMessage* msg) {
 				balls[i].p1 = balls[i].currentPresentation;
 				balls[i].p4 = vector2(262 - 112 - 70, 0);
 				balls[i].t = 0;
-				float distance = dis(balls[i].p1 - balls[i].p4);
-				float off = 8.0;
+				double distance = dis(balls[i].p1 - balls[i].p4);
+				double off = 8.0;
 				balls[i].speed = 3.0 / (distance / off);
 
 
@@ -895,6 +982,9 @@ void userClick() {
 				}
 				else if (map[row][col].type && curShovel) { //铲掉植物
 					map[row][col].type = 0;
+					curShovel = 0;
+				}
+				else if (curShovel) {
 					curShovel = 0;
 				}
 
