@@ -19,6 +19,9 @@
 * 18.增加樱桃炸弹
 * 19.为植物增加阳光消耗和冷却时间
 * 20.增加铲子
+* 21.增加小推车
+* 22.增加坚果墙
+* 23.增加土豆雷
 */
 
 #include <stdio.h>
@@ -36,7 +39,7 @@
 #define WIN_HEIGHT 600
 #define ZOMBIE_MAX 10
 
-enum {WAN_DOU, XIANG_RI_KUI, YING_TAO_ZHA_DAN, ZHI_WU_COUNT};
+enum {WAN_DOU, XIANG_RI_KUI, YING_TAO_ZHA_DAN, JIANG_GUO_QIANG, TU_DOU_LEI, ZHI_WU_COUNT};
 enum {SUNSHINE_DOWN, SUNSHINE_GROUND, SUNSHINE_COLLECT, SUNSHINE_PRODUCT};
 enum {GOING, WIN, FAIL};
 
@@ -45,10 +48,17 @@ struct averageZhiwu {
 	int frameIndex; //帧序号
 	int deadTime; //死亡计时器
 
+	int shootTime;
+
 	int timer;
 	int x, y;
-	
-	int shootTime;
+
+	bool half;
+	bool quarter;
+
+	bool ready;
+	bool trigger;
+	int readyTime;
 } map[5][9] = { 0 };
 
 struct visualZhiwu {
@@ -99,7 +109,7 @@ struct judge {
 } cards[ZHI_WU_COUNT];
 
 struct car {
-	bool cue; //判断小车是否被触发
+	bool trigger; //判断小车是否被触发
 	bool exist; //判断小车是否存在 0：存在 1：不存在
 	int x, y;
 	double speed;
@@ -108,6 +118,10 @@ struct car {
 IMAGE imgBackground = 0; //背景图片
 IMAGE imgBar5 = 0; //植物卡槽
 IMAGE imgBulletNormal = 0;
+IMAGE imgShovel, imgShovelSlot;
+IMAGE imgCar;
+IMAGE imgUnready;
+IMAGE imgXipu, imgXipuText;
 IMAGE imgBulletBlast[4] = { 0 };
 IMAGE imgCards[ZHI_WU_COUNT], imgCardsBlack[ZHI_WU_COUNT]; //植物卡牌可选和不可选
 IMAGE imgZombieDead[10] = { 0 };
@@ -117,8 +131,7 @@ IMAGE imgZombieEating[21] = { 0 };
 IMAGE imgZombie[22] = { 0 };
 IMAGE imgSunshineBall[29] = { 0 };
 IMAGE* imgZhiWu[ZHI_WU_COUNT][20] = { 0 }; //植物帧图
-IMAGE imgShovel, imgShovelSlot;
-IMAGE imgCar;
+IMAGE imgWallnutHalf[11], imgWallnutQuarter[15];
 
 int curX = 0, curY = 0; //当前选中植物在移动过程中的位置
 int curZhiWu = 0; //0：未选中 1：选择第一种植物
@@ -189,6 +202,11 @@ void gameInit() {
 			cards[i].cost = 50;
 		else if (cards[i].type == YING_TAO_ZHA_DAN)
 			cards[i].cost = 150;
+		else if (cards[i].type == JIANG_GUO_QIANG)
+			cards[i].cost = 50;
+		else if (cards[i].type == TU_DOU_LEI) {
+			cards[i].cost = 25;
+		}
 	}
 
 	curZhiWu = 0; //初始化选中植物状态
@@ -274,11 +292,29 @@ void gameInit() {
 	//小车状态设置
 	for (int i = 0; i < 5; i++) {
 		cars[i].exist = 1;
-		cars[i].cue = 0;
+		cars[i].trigger = 0;
 		cars[i].x = 70;
 		cars[i].y = (i + 1) * 102 + 15;
 		cars[i].speed = 0;
 	}
+
+	//初始化坚果墙的其他两种形态的帧图片数组
+	for (int i = 0; i < 11; i++) {
+		sprintf_s(name, sizeof(name), "res/zhiwu/3/half/%d.png", i + 1);
+		loadimage(&imgWallnutHalf[i], name);
+	}
+	for (int i = 0; i < 15; i++) {
+		sprintf_s(name, sizeof(name), "res/zhiwu/3/quarter/%d.png", i + 1);
+		loadimage(&imgWallnutQuarter[i], name);
+	}
+
+	//初始化土豆雷的未准备图片、触发后的效果图片
+	sprintf_s(name, sizeof(name), "res/zhiwu/4/unready.png");
+	loadimage(&imgUnready, name);
+	sprintf_s(name, sizeof(name), "res/zhiwu/4/xipu.png");
+	loadimage(&imgXipu, name);
+	sprintf_s(name, sizeof(name), "res/zhiwu/4/xipu_text.png");
+	loadimage(&imgXipuText, name);
 }
 
 void drawCards() {
@@ -294,19 +330,33 @@ void drawCards() {
 }
 
 void drawPlant() {
-	//一帧一帧输出，实现植物摇摆
+
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
 				int zhiWuType = map[i][j].type - 1;
 				int index = map[i][j].frameIndex;
-				if (!index) {
+				if (index == 0) {
 					index++;
 				}
 				if(map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 8)
 					putimagePNG(map[i][j].x - 70, map[i][j].y + 15 - 70, imgZhiWu[zhiWuType][index]);
-				else
+				else if (map[i][j].half) {
+					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgWallnutHalf[index]);
+				}
+				else if (map[i][j].quarter) {
+					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgWallnutQuarter[index]);
+				}
+				else if (map[i][j].type == TU_DOU_LEI + 1 && map[i][j].ready == 0) {
+					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgUnready);
+				}
+				else if (map[i][j].trigger) {
+					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgXipu);
+					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgXipuText);
+				}
+				else {
 					putimagePNG(map[i][j].x, map[i][j].y + 15, imgZhiWu[zhiWuType][index]);
+				}
 			}
 			if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 19) {
 				map[i][j].type = 0;
@@ -437,9 +487,9 @@ void updateWindow() {
 	drawPlant();
 	drawZombie();
 	drawBullet();
-	drawSunshine();
 	drawShovel();
 	drawCar();
+	drawSunshine();
 
 	EndBatchDraw(); //结束缓冲
 }
@@ -468,11 +518,25 @@ void updatePlant() {
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
-				map[i][j].frameIndex++;
-				int zhiWuType = map[i][j].type - 1;
-				int index = map[i][j].frameIndex;
-				if (imgZhiWu[zhiWuType][index] == NULL) {
-					map[i][j].frameIndex = 0;
+				if (map[i][j].half) {
+					map[i][j].frameIndex = (map[i][j].frameIndex + 1) % 11;
+				}
+				else if (map[i][j].quarter) {
+					map[i][j].frameIndex = (map[i][j].frameIndex + 1) % 15;
+				}
+				else if (map[i][j].type == TU_DOU_LEI + 1 && map[i][j].ready == 0) {
+					map[i][j].readyTime++;
+					if (map[i][j].readyTime > 100) {
+						map[i][j].ready = 1;
+					}
+				}
+				else {
+					map[i][j].frameIndex++;
+					int zhiWuType = map[i][j].type - 1;
+					int index = map[i][j].frameIndex;
+					if (imgZhiWu[zhiWuType][index] == NULL) {
+						map[i][j].frameIndex = 0;
+					}
 				}
 			}
 		}
@@ -628,7 +692,7 @@ void updateZombie() {
 						gameStatus = FAIL;
 					}
 					else {
-						cars[zombies[i].row].cue = 1;
+						cars[zombies[i].row].trigger = 1;
 					}
 				}
 			}
@@ -641,10 +705,17 @@ void updateZombie() {
 		count2 = 0;
 		for (int i = 0; i < zombieMax; i++) {
 			if (zombies[i].used) {
-				if (zombies[i].dead || zombies[i].boomDead) {
+				if (zombies[i].dead) {
 					zombies[i].frameIndex++;
 					//如果僵尸死亡就增加死亡的帧数，并在加完之后删除僵尸
-					if ((zombies[i].dead == 1 && zombies[i].frameIndex >= 11) || (zombies[i].boomDead == 1 && zombies[i].frameIndex > 21)) {
+					if (zombies[i].frameIndex >= 11) {
+						zombies[i].used = 0;
+						killCount++;
+					}
+				}
+				else if (zombies[i].boomDead) {
+					zombies[i].frameIndex++;
+					if (zombies[i].frameIndex >= 20) {
 						zombies[i].used = 0;
 						killCount++;
 					}
@@ -658,6 +729,8 @@ void updateZombie() {
 			}
 		}
 	}
+
+
 	
 }
 
@@ -768,12 +841,19 @@ void zombie2Plant() {
 		int row = zombies[i].row;
 
 		for (int j = 0; j < 9; j++) {
-			if (map[row][j].type == 0) continue;
 			int plantX = 256 - 112 + j * 81;
 			int x1 = plantX + 10;
 			int x2 = plantX + 60;
 			int x3 = zombies[i].x + 80;
 			if (x3 > x1 && x3 < x2) {
+				//修复多个僵尸同时将植物啃食完毕后僵尸仍在啃食的bug
+				if (map[row][j].type == 0) {
+					if (zombies[i].eating) {
+						zombies[i].eating = 0;
+						zombies[i].speed = (100 + rand() % 50) / 100;
+					}
+					continue;
+				}
 				zombies[i].eating = 1;
 				zombies[i].speed = 0;
 				for (int k = 0; k < zombieMax; k++) {
@@ -781,11 +861,29 @@ void zombie2Plant() {
 					if (zombies[k].eating && map[row][j].type != YING_TAO_ZHA_DAN + 1) {
 						map[row][j].deadTime++;
 					}
-					if (map[row][j].deadTime > 100) {
-						map[row][j].deadTime = 0;
-						map[row][j].type = 0;
-						zombies[i].eating = 0;
-						zombies[i].speed = (100 + rand() % 50) / 100;
+					if (map[row][j].deadTime > 150) {
+						if(map[row][j].type == JIANG_GUO_QIANG + 1) {
+							if (map[row][j].deadTime > 800 && map[row][j].deadTime <= 1600) {
+								map[row][j].half = 1;
+							}
+							else if (map[row][j].deadTime > 1600 && map[row][j].deadTime <= 2000) {
+								map[row][j].half = 0;
+								map[row][j].quarter = 1;
+							}
+							else if (map[row][j].deadTime > 2000) {
+								map[row][j].quarter = 0;
+								map[row][j].deadTime = 0;
+								map[row][j].type = 0;
+								zombies[i].eating = 0;
+								zombies[i].speed = (100 + rand() % 50) / 100;
+							}
+						}
+						else {
+							map[row][j].deadTime = 0;
+							map[row][j].type = 0;
+							zombies[i].eating = 0;
+							zombies[i].speed = (100 + rand() % 50) / 100;
+						}
 					}
 				}
 			}
@@ -797,7 +895,7 @@ void car2Zombie() {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 
 	for (int i = 0; i < 5; i++) {
-		if (cars[i].cue) {
+		if (cars[i].trigger) {
 			int x = cars[i].x + 60;
 			
 			for (int j = 0; j < zombieMax; j++) {
@@ -812,17 +910,41 @@ void car2Zombie() {
 	}
 }
 
-void collisionCheck() {
-	bullet2Zombie();
-	zombie2Plant();
-	car2Zombie();
+void tu_dou_lei2Zombie() {
+	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
+
+	for (int i = 0; i < zombieMax; i++) {
+		int row = zombies[i].row;
+		for (int j = 0; j < 9; j++) {
+			if (map[row][j].type == TU_DOU_LEI + 1 && map[row][j].ready) {
+				int x = map[row][j].x + 75;
+				int x1 = zombies[i].x + 80;
+				int x2 = zombies[i].x + 100;
+				if (x > x1 && x < x2) {
+					map[row][j].trigger = 1;
+				}
+			}
+		}
+	}
 }
 
-void updateNearbyZombies(int boomX, int boomY) {
+void collisionCheck() {
+	bullet2Zombie();
+	car2Zombie();
+	tu_dou_lei2Zombie();
+	zombie2Plant();
+}
+
+void updateNearbyZombies(int type, int boomX, int boomY) {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	for (int i = 0; i < zombieMax; i++) {
-		if (zombies[i].used) {
+		if (zombies[i].used && type == YING_TAO_ZHA_DAN + 1) {
 			if (abs(zombies[i].x - boomX) <= 110 && abs(zombies[i].y - boomY) <= 110) {
+				zombies[i].boomDead = 1;
+			}
+		}
+		else if (zombies[i].used && type == TU_DOU_LEI + 1) {
+			if (abs(zombies[i].x - boomX) <= 50 && abs(zombies[i].y - boomY) <= 100) {
 				zombies[i].boomDead = 1;
 			}
 		}
@@ -833,7 +955,13 @@ void boom() {
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex == 8) {
-				updateNearbyZombies(map[i][j].x - 60, map[i][j].y + 102);
+				updateNearbyZombies(map[i][j].type, map[i][j].x - 60, map[i][j].y + 102);
+			}
+			if (map[i][j].trigger) {
+				updateNearbyZombies(map[i][j].type, map[i][j].x, map[i][j].y + 102);
+				map[i][j].type = 0;
+				map[i][j].trigger = 0;
+				map[i][j].ready = 0;
 			}
 		}
 	}
@@ -841,12 +969,12 @@ void boom() {
 
 void updateCars() {
 	for (int i = 0; i < 5; i++) {
-		if (cars[i].exist && cars[i].cue) {
+		if (cars[i].exist && cars[i].trigger) {
 			cars[i].speed = 10;
 			cars[i].x += cars[i].speed;
 			if (cars[i].x > WIN_WIDTH) {
 				cars[i].exist = 0;
-				cars[i].cue = 0;
+				cars[i].trigger = 0;
 			}
 		}
 	}
@@ -857,7 +985,7 @@ void judgeWin() {
 		int j = 0;
 		//确保小车全部跑完，xixi~~~
 		for (j = 0; j < 5; j++) {
-			if (cars[j].cue) break;
+			if (cars[j].trigger) break;
 		}
 		if (j == 5) {
 			gameStatus = WIN;
@@ -877,7 +1005,7 @@ void updateGame() {
 	shoot(); //发射豌豆子弹
 	updateBullets(); //更新豌豆子弹
 
-	boom(); //樱桃炸弹爆炸
+	boom(); //爆炸
 
 	updateCars(); //更新小车状态
 
@@ -976,6 +1104,12 @@ void userClick() {
 					}
 					else if (map[row][col].type == XIANG_RI_KUI + 1) {
 						cards[XIANG_RI_KUI].CD = 200;
+					}
+					else if (map[row][col].type == JIANG_GUO_QIANG + 1) {
+						cards[JIANG_GUO_QIANG].CD = 500;
+					}
+					else if (map[row][col].type == TU_DOU_LEI + 1) {
+						cards[TU_DOU_LEI].CD = 500;
 					}
 
 					sunshine -= cards[curZhiWu - 1].cost;
