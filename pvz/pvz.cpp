@@ -22,6 +22,7 @@
 * 21.增加小推车
 * 22.增加坚果墙
 * 23.增加土豆雷
+* 24.增加音乐音效
 */
 
 #include <stdio.h>
@@ -142,6 +143,40 @@ int zombieCount = 0; //已出现僵尸数
 int gameStatus = GOING; //游戏状态
 bool curShovel = 0; //判断铲子状态
 
+//函数声明
+void barDown();
+void boom();
+void bullet2Zombie();
+void car2Zombie();
+bool checkOver();
+void collectSunshine(ExMessage* msg);
+void collisionCheck();
+void createSunshine();
+void createZombie();
+void drawBullet();
+void drawCar();
+void drawCards();
+void drawPlant();
+void drawShovel();
+void drawSunshine();
+bool fileExist(const char* name);
+void gameInit();
+void judgeWin();
+void shoot();
+void startUI();
+void tu_dou_lei2Zombie();
+void updateBullets();
+void updateCars();
+void updateGame();
+void updateNearbyZombies(int type, int boomX, int boomY);
+void updatePlant();
+void updateSunshine();
+void updateWindow();
+void updateZombie();
+void userClick();
+void viewScene();
+void zombie2Plant();
+
 bool fileExist(const char* name) {
 	FILE* fp = fopen(name, "r");
 	if (fp) {
@@ -259,6 +294,9 @@ void gameInit() {
 	for (int i = 0; i < 21; i++) {
 		sprintf_s(name, sizeof(name), "res/zm_eat/%d.png", i + 1);
 		loadimage(&imgZombieEating[i], name);
+		
+
+
 	}
 
 	//初始化僵尸死亡的帧图片数组
@@ -429,6 +467,8 @@ void drawZombie() {
 			}
 			else if (zombies[i].eating) {
 				img = imgZombieEating;
+				mciSendString("play res/zombeat.wav", 0, 0, 0);/////////////
+
 			}
 			else {
 				img = imgZombie;
@@ -482,7 +522,7 @@ void updateWindow() {
 	putimage(-112, 15, &imgBackground);
 	putimagePNG(180 - 112, 0, &imgBar5);
 	putimagePNG(680, -5, &imgShovelSlot);
-
+	mciSendString("play res/zombrun.wav", 0, 0, 0);/////////////
 	drawCards();
 	drawPlant();
 	drawZombie();
@@ -651,6 +691,12 @@ void createZombie() {
 	if (zombieCount >= ZOMBIE_MAX) {
 		return;
 	}
+	
+	static bool zombiesAreComing = 0;
+	if (zombieCount == 1 && zombiesAreComing == 0) {
+		zombiesAreComing = 1;
+		mciSendString("play res/zombiesAreComing.wav", 0, 0, 0);
+	}
 
 	static int zombieFrequence = 500;
 	static int count = 0;
@@ -672,6 +718,26 @@ void createZombie() {
 			zombies[i].blood = 100;
 			zombies[i].dead = 0;
 			zombieCount++;
+		}
+	}
+	static int count2 = 0;
+	count++;
+	if (count > 300) {
+		int num = rand() % 6;
+		switch (num)
+		{
+		case 0:
+			mciSendString("play res/groan1.mp3", 0, 0, 0);
+		case 1:
+			mciSendString("play res/groan2.mp3", 0, 0, 0);
+		case 2:
+			mciSendString("play res/groan3.mp3", 0, 0, 0);
+		case 3:
+			mciSendString("play res/groan4.mp3", 0, 0, 0);
+		case 4:
+			mciSendString("play res/groan5.mp3", 0, 0, 0);
+		case 5:
+			mciSendString("play res/groan6.mp3", 0, 0, 0);
 		}
 	}
 }
@@ -763,7 +829,7 @@ void shoot() {
 						
 							for (k = 0; k < bulletMax && bullets[k].used; k++);
 							if (k < bulletMax) {
-								bullets[k].used = 1;
+ 								bullets[k].used = 1;
 								bullets[k].row = i;
 								bullets[k].speed = 24;
 
@@ -820,6 +886,7 @@ void bullet2Zombie() {
 			int x2 = zombies[j].x + 110;
 			int x = bullets[i].x;
 			if (bullets[i].row == zombies[j].row && x > x1 && x < x2 && zombies[j].dead == 0) {
+				mciSendString("play res/attrackZomb.mp3", 0, 0, 0);/////////////
 				zombies[j].blood -= 10;
 				bullets[i].blast = 1;
 				bullets[i].speed = 0;
@@ -863,14 +930,14 @@ void zombie2Plant() {
 					}
 					if (map[row][j].deadTime > 150) {
 						if(map[row][j].type == JIANG_GUO_QIANG + 1) {
-							if (map[row][j].deadTime > 800 && map[row][j].deadTime <= 1600) {
+							if (map[row][j].deadTime > 600 && map[row][j].deadTime <= 1200) {
 								map[row][j].half = 1;
 							}
-							else if (map[row][j].deadTime > 1600 && map[row][j].deadTime <= 2000) {
+							else if (map[row][j].deadTime > 1200 && map[row][j].deadTime <= 1500) {
 								map[row][j].half = 0;
 								map[row][j].quarter = 1;
 							}
-							else if (map[row][j].deadTime > 2000) {
+							else if (map[row][j].deadTime > 1500) {
 								map[row][j].quarter = 0;
 								map[row][j].deadTime = 0;
 								map[row][j].type = 0;
@@ -896,6 +963,7 @@ void car2Zombie() {
 
 	for (int i = 0; i < 5; i++) {
 		if (cars[i].trigger) {
+			mciSendString("play res/carQiDong.mp3", 0, 0, 0);/////////////
 			int x = cars[i].x + 60;
 			
 			for (int j = 0; j < zombieMax; j++) {
@@ -955,10 +1023,12 @@ void boom() {
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex == 8) {
+				mciSendString("play res/cherrybomb.mp3", 0, 0, 0);/////////////
 				updateNearbyZombies(map[i][j].type, map[i][j].x - 60, map[i][j].y + 102);
 			}
 			if (map[i][j].trigger) {
 				updateNearbyZombies(map[i][j].type, map[i][j].x, map[i][j].y + 102);
+				mciSendString("play res/potato_mine.mp3", 0, 0, 0);/////////////
 				map[i][j].type = 0;
 				map[i][j].trigger = 0;
 				map[i][j].ready = 0;
@@ -1089,6 +1159,7 @@ void userClick() {
 				int col = (msg.x - 256 + 112) / 81;
 
 				if (map[row][col].type == 0 && curZhiWu) { //种下植物
+					mciSendString("play res/grow.mp3", 0, 0, 0);//////////////
 					map[row][col].x = 256 - 112 + col * 81;
 					map[row][col].y = 77 + row * 102;
 					map[row][col].type = curZhiWu;
@@ -1131,6 +1202,7 @@ void userClick() {
 
 void startUI() {
 	IMAGE imgBackground, imgMenu[9];
+	mciSendString("play res/menuMusic.wav", 0, 0, 0);/////////////
 	char name[64];
 
 	//加载菜单界面各元素图片
@@ -1163,6 +1235,8 @@ void startUI() {
 			else if(msg.message == WM_LBUTTONUP && flag) {
 				for (int i = 0; i <= 4; i++) {
 					if (msg.x > 474 && msg.x < 474 + 300 && msg.y > -30 + 90 * i && msg.y < -30 + 90 * (i + 1)) {
+						mciSendString("stop res/menuMusic.wav", NULL, 0, NULL);/////////////////
+						mciSendString("close res/menuMusic.wav", NULL, 0, NULL);/////////////////
 						return;
 					}
 					else flag[i] = 0;
@@ -1251,6 +1325,7 @@ bool checkOver() {
 	if (gameStatus == WIN) {
 		Sleep(2000);
 		loadimage(0, "res/win.png");
+		mciSendString("play res/gamewin.wav", 0, 0, 0);/////////////
 		ret = true;
 	}
 	else if (gameStatus == FAIL) {
