@@ -39,9 +39,9 @@
 #define WIN_HEIGHT 600 // 屏幕高度
 #define ZOMBIE_MAX 10 // 获胜所需僵尸总数
 
-enum {WAN_DOU, XIANG_RI_KUI, YING_TAO_ZHA_DAN, JIANG_GUO_QIANG, TU_DOU_LEI, ZHI_WU_COUNT}; // 枚举植物种类
-enum {SUNSHINE_DOWN, SUNSHINE_GROUND, SUNSHINE_COLLECT, SUNSHINE_PRODUCT}; // 枚举阳光球状态
-enum {GOING, WIN, FAIL}; // 枚举游戏进展状态
+enum { WAN_DOU, XIANG_RI_KUI, YING_TAO_ZHA_DAN, JIANG_GUO_QIANG, TU_DOU_LEI, ZHI_WU_COUNT }; // 枚举植物种类
+enum { SUNSHINE_DOWN, SUNSHINE_GROUND, SUNSHINE_COLLECT, SUNSHINE_PRODUCT }; // 枚举阳光球状态
+enum { GOING, WIN, FAIL }; // 枚举游戏进展状态
 
 // 定义草坪上的植物
 struct plant {
@@ -226,14 +226,18 @@ void gameInit() {
 	// 植物花费设置
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
 		cards[i].type = i;
-		if (cards[i].type == WAN_DOU)
+		if (cards[i].type == WAN_DOU) {
 			cards[i].cost = 100;
-		else if (cards[i].type == XIANG_RI_KUI)
+		}
+		else if (cards[i].type == XIANG_RI_KUI) {
 			cards[i].cost = 50;
-		else if (cards[i].type == YING_TAO_ZHA_DAN)
+		}
+		else if (cards[i].type == YING_TAO_ZHA_DAN) {
 			cards[i].cost = 150;
-		else if (cards[i].type == JIANG_GUO_QIANG)
+		}
+		else if (cards[i].type == JIANG_GUO_QIANG) {
 			cards[i].cost = 50;
+		}
 		else if (cards[i].type == TU_DOU_LEI) {
 			cards[i].cost = 25;
 		}
@@ -273,7 +277,7 @@ void gameInit() {
 	loadimage(&imgBulletBlast[3], "res/bullets/bullet_blast.png");
 	for (int i = 0; i < 3; i++) {
 		double k = (i + 1) * 0.2;
-		loadimage(&imgBulletBlast[i], "res/bullets/bullet_blast.png", imgBulletBlast[3].getwidth() * k, imgBulletBlast[3].getheight() * k,1);
+		loadimage(&imgBulletBlast[i], "res/bullets/bullet_blast.png", imgBulletBlast[3].getwidth() * k, imgBulletBlast[3].getheight() * k, 1);
 	}
 	// 初始化僵尸吃植物的帧图片数组
 	for (int i = 0; i < 21; i++) {
@@ -350,8 +354,9 @@ void drawPlant() {
 				if (index == 0) {
 					index++;
 				}
-				if(map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 8)
+				if (map[i][j].type == YING_TAO_ZHA_DAN + 1 && map[i][j].frameIndex >= 8) {
 					putimagePNG(map[i][j].x - 70, map[i][j].y + 15 - 70, imgPlant[PlantType][index]);
+				}
 				else if (map[i][j].half) {
 					putimagePNG(map[i][j].x, map[i][j].y + 15, &imgWallnutHalf[index]);
 				}
@@ -398,13 +403,17 @@ void drawPlant() {
 		IMAGE* img = imgPlant[curPlant - 1][1];
 		putimagePNG(curX - img->getwidth() / 2, curY - img->getheight() / 2, img);
 	}
+	// 避免上一个未种植的植物影响
+	else {
+		memset(unmap, 0, sizeof(unmap));
+	}
 }
 
 void drawSunshine() {
 	int ballMax = sizeof(balls) / sizeof(balls[0]);
 	// 渲染产生或制造的阳光球
 	for (int i = 0; i < ballMax; i++) {
-		if(balls[i].used) {
+		if (balls[i].used) {
 			IMAGE* img = &imgSunshineBall[balls[i].frameIndex];
 			putimagePNG(balls[i].currentPresentation.x, balls[i].currentPresentation.y, img);
 		}
@@ -476,7 +485,9 @@ void drawShovel() {
 	if (curShovel) {
 		putimagePNG(curX - 5, curY - imgShovel.getheight() + 5, &imgShovel);
 	}
-	else putimagePNG(685, 5, &imgShovel);
+	else {
+		putimagePNG(685, 5, &imgShovel);
+	}
 }
 
 void drawCar() {
@@ -505,16 +516,20 @@ void updateWindow() {
 
 void updatePlant() {
 	static int count = 0;
-	if (++count < 3) return;
+	if (++count < 3) {
+		return;
+	}
 	count = 0;
 	//判断阳光数是否足以购买植物以及卡牌是否冷却完毕
 	for (int i = 0; i < ZHI_WU_COUNT; i++) {
 		if (cards[i].CD == 0) {
 			cards[i].able = 1;
-			if (sunshine >= cards[i].cost)
+			if (sunshine >= cards[i].cost) {
 				cards[i].able = 1;
-			else
+			}
+			else {
 				cards[i].able = 0;
+			}
 		}
 		else {
 			cards[i].able = 0;
@@ -561,7 +576,10 @@ void createSunshine() {
 		int ballMax = sizeof(balls) / sizeof(balls[0]);
 		int i = 0;
 		while (i < ballMax && balls[i].used) i++;
-		if (i >= ballMax) return;
+		// 防越界
+		if (i >= ballMax) {
+			return;
+		}
 		balls[i].used = 1;
 		balls[i].frameIndex = 0;
 		balls[i].timer = 0;
@@ -583,7 +601,10 @@ void createSunshine() {
 					map[i][j].timer = 0;
 					int k;
 					for (k = 0; k < ballMax && balls[k].used; k++) {
-						if (k >= ballMax) return;
+						// 防越界
+						if (k >= ballMax) {
+							return;
+						}
 					}
 					// 利用贝塞尔曲线勾勒阳光球制造出的路径
 					balls[k].used = 1;
@@ -686,7 +707,9 @@ void createZombie() {
 	}
 	// 僵尸间歇性呻吟音效
 	static int count2 = 0;
-	if(zombiesAreComing && zombieCount > killCount) count2++;
+	if (zombiesAreComing && zombieCount > killCount) {
+		count2++;
+	}
 	if (count2 > 800) {
 		count2 = 0;
 		int num = rand() % 6;
@@ -765,7 +788,9 @@ void updateZombie() {
 
 void shoot() {
 	static int count = 0;
-	if (++count < 3) return;
+	if (++count < 3) {
+		return;
+	}
 	count = 0;
 	int lines[5] = { 0 };
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
@@ -815,7 +840,9 @@ void shoot() {
 void updateBullets() {
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
 	static int count = 0;
-	if (++count < 2) return;
+	if (++count < 2) {
+		return;
+	}
 	count = 0;
 	for (int i = 0; i < bulletMax; i++) {
 		if (bullets[i].used) {
@@ -839,9 +866,13 @@ void bullet2Zombie() {
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	for (int i = 0; i < bulletMax; i++) {
-		if (bullets[i].used == 0 || bullets[i].blast) continue;
+		if (bullets[i].used == 0 || bullets[i].blast) {
+			continue;
+		}
 		for (int j = 0; j < zombieMax; j++) {
-			if (zombies[j].used == 0) continue;
+			if (zombies[j].used == 0) {
+				continue;
+			}
 			int x1 = zombies[j].x + 80;
 			int x2 = zombies[j].x + 110;
 			int x = bullets[i].x;
@@ -888,7 +919,7 @@ void zombie2Plant() {
 					}
 					if (map[row][j].deadTime > 150) {
 						// 坚果墙特殊处理，死亡较慢
-						if(map[row][j].type == JIANG_GUO_QIANG + 1) {
+						if (map[row][j].type == JIANG_GUO_QIANG + 1) {
 							if (map[row][j].deadTime > 600 && map[row][j].deadTime <= 1200) {
 								map[row][j].half = 1;
 							}
@@ -1011,7 +1042,9 @@ void judgeWin() {
 		int j = 0;
 		//确保小车全部跑完，xixi~~~
 		for (j = 0; j < 5; j++) {
-			if (cars[j].trigger) break;
+			if (cars[j].trigger) {
+				break;
+			}
 		}
 		if (j == 5) {
 			gameStatus = WIN;
@@ -1075,7 +1108,7 @@ void userClick() {
 					curY = msg.y;
 				}
 			}
-			else if(msg.x > 680 && msg.x < 680 + 90 && msg.y < 95){ // 点击铲子
+			else if (msg.x > 680 && msg.x < 680 + 90 && msg.y < 95) { // 点击铲子
 				mciSendString("play res/shovel.mp3", 0, 0, 0);
 				curShovel = 1;
 				firstDown = 1;
@@ -1155,7 +1188,7 @@ void startUI() {
 	loadimage(&imgBackground, "res/menu.png");
 	for (int i = 1; i <= 8; i++) {
 		sprintf_s(name, sizeof(name), "res/menu%d.png", i);
-		loadimage(imgMenu+i, name);
+		loadimage(imgMenu + i, name);
 	}
 	sprintf_s(name, sizeof(name), "res/quit1.png");
 	loadimage(imgQuit, name);
@@ -1178,12 +1211,16 @@ void startUI() {
 		putimagePNG(810, 510, flag[0] ? imgQuit + 1 : imgQuit);
 		putimagePNG(730, 520, flag[5] ? imgHelp + 1 : imgHelp);
 		// 帮助页面查看
-		if (flag[6]) putimage(0, 0, imgHelp + 2);
+		if (flag[6]) {
+			putimage(0, 0, imgHelp + 2);
+		}
 		ExMessage msg;
 		// 消息处理
 		if (peekmessage(&msg)) {
 			if (flag[6]) {
-				if (msg.message == WM_LBUTTONDOWN && msg.x > 367 && msg.x < 367 + 175 && msg.y > 523 && msg.y < 523 + 90) check2 = 1;
+				if (msg.message == WM_LBUTTONDOWN && msg.x > 367 && msg.x < 367 + 175 && msg.y > 523 && msg.y < 523 + 90) {
+					check2 = 1;
+				}
 				else if (msg.message == WM_LBUTTONUP && msg.x > 367 && msg.x < 367 + 175 && msg.y > 523 && msg.y < 523 + 90 && check2) {
 					mciSendString("play res/buttonclick.mp3", 0, 0, 0);
 					flag[6] = 0;
@@ -1205,20 +1242,24 @@ void startUI() {
 					}
 				}
 			}
-			else if(msg.message == WM_LBUTTONUP && check) {
+			else if (msg.message == WM_LBUTTONUP && check) {
 				// 查看帮助
 				if (msg.x > 730 && msg.x < 730 + 47 && msg.y > 520 && msg.y < 520 + 27) {
 					mciSendString("play res/buttonclick.mp3", 0, 0, 0);
 					flag[6] = 1;
 					flag[5] = 0;
 				}
-				else flag[5] = 0;
+				else {
+					flag[5] = 0;
+				}
 				// 退出
 				if (msg.x > 810 && msg.x < 810 + 47 && msg.y > 510 && msg.y < 510 + 27) {
 					mciSendString("play res/buttonclick.mp3", 0, 0, 0);
 					exit(0);
 				}
-				else flag[0] = 0;
+				else {
+					flag[0] = 0;
+				}
 				// 进入游戏
 				for (int i = 1; i <= 4; i++) {
 					if (msg.x > 474 && msg.x < 474 + 300 && msg.y > -30 + 90 * i && msg.y < -30 + 90 * (i + 1)) {
@@ -1227,7 +1268,9 @@ void startUI() {
 						mciSendString("close res/bg.wav", 0, 0, 0);
 						return;
 					}
-					else flag[i] = 0;
+					else {
+						flag[i] = 0;
+					}
 				}
 			}
 		}
@@ -1256,7 +1299,9 @@ void viewScene() {
 				index[k] = (index[k] + 1) % 11;
 			}
 		}
-		if (count >= 10)count = 0;
+		if (count >= 10) {
+			count = 0;
+		}
 		EndBatchDraw();
 		Sleep(5);
 		//停留一秒左右
@@ -1279,7 +1324,9 @@ void viewScene() {
 				if (count >= 10) {
 					index[k] = (index[k] + 1) % 11;
 				}
-				if (count >= 10) count = 0;
+				if (count >= 10) {
+					count = 0;
+				}
 			}
 			EndBatchDraw();
 			Sleep(5);
