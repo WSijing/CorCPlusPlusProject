@@ -1,3 +1,2 @@
 D:\xuexiziliao\homework\me\pvz\Debug\pvz.exe
 D:\xuexiziliao\gameProject\myPvz\pvz\Debug\pvz.exe
-D:\Git_project\CPlusPlus_Project\pvz\Debug\pvz.exe
