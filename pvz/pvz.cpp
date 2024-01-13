@@ -138,7 +138,7 @@ bool firstDown = 0; // 判断选取还是放下
 bool curShovel = 0; // 判断铲子状态
 int curX = 0, curY = 0; // 当前选中植物在移动过程中的坐标
 int curPlant = 0; // 0：未选中；1：选择第一种植物
-int sunshine = 50; // 阳光值
+int sunshine = 0; // 阳光值
 int killCount = 0; // 已击杀僵尸数
 int zombieCount = 0; // 已出现僵尸数
 int gameStatus = GOING; // 游戏状态
@@ -147,7 +147,7 @@ int gameStatus = GOING; // 游戏状态
 int main(); // 主函数
 void gameInit(); // 初始化游戏，加载游戏所需资源
 bool fileExist(const char* name); // 判断文件存在性
-void startUI(); // 菜单界面（即主界面）
+void startUI(); // 菜单界面
 void viewScene(); // 片头巡场
 void barDown(); // 卡槽下降
 void userClick(); // 对玩家操作的响应
@@ -163,8 +163,8 @@ void drawZombie(); // 渲染僵尸
 void updateGame(); // 游戏状态的实时更新
 void createSunshine(); // 创建阳光球
 void createZombie(); // 创建僵尸
-void updateBullets(); // 更新豌豆子弹状态
-void updateCars(); // 更新小推车状态
+void updateBullet(); // 更新豌豆子弹状态
+void updateCar(); // 更新小推车状态
 void updateNearbyZombies(int type, int boomX, int boomY); // 更新灰烬植物有效范围内的僵尸状态
 void updatePlant(); // 更新植物状态
 void updateSunshine(); // 更新阳光球状态
@@ -172,7 +172,7 @@ void updateZombie(); // 更新僵尸状态
 void shoot(); // 判定豌豆发射以及更新豌豆子弹状态
 void boom(); // 灰烬植物boom~~~
 void collisionCheck(); // 碰撞检测
-void tu_dou_lei2Zombie(); // 就绪的土豆雷与僵尸的碰撞检测
+void potato_mine2Zombie(); // 就绪的土豆雷与僵尸的碰撞检测
 void bullet2Zombie(); // 子弹与僵尸的碰撞检测
 void car2Zombie(); // 小推车与僵尸的碰撞检测
 void zombie2Plant(); // 僵尸与植物的碰撞检测
@@ -243,7 +243,7 @@ void gameInit() {
 		}
 	}
 	curPlant = 0; // 初始化选中植物状态
-	sunshine = 50; // 初始化阳光值
+	sunshine = 9999; // 初始化阳光值
 	// 初始化阳光球数组
 	memset(balls, 0, sizeof(balls));
 	for (int i = 0; i < 29; i++) {
@@ -346,6 +346,7 @@ void drawCards() {
 }
 
 void drawPlant() {
+	// 实现植物的逐帧摇摆，创造动感
 	for (int i = 0; i < 5; i++) {
 		for (int j = 0; j < 9; j++) {
 			if (map[i][j].type > 0) {
@@ -426,7 +427,11 @@ void drawSunshine() {
 		}
 	}
 	//显示阳光值
-	char scoreText[8];
+	char scoreText[5];
+	// 设置阳光值最大值
+	if (sunshine >= 9999) {
+		sunshine = 9999;
+	}
 	sprintf_s(scoreText, sizeof(scoreText), "%d", sunshine);
 	int textX = 220 - 112, tmp = sunshine;
 	while (tmp) {
@@ -503,13 +508,13 @@ void updateWindow() {
 	//渲染游戏背景、植物卡槽和铲子槽
 	putimage(-112, 15, &imgBackground);
 	putimagePNG(180 - 112, 0, &imgBar5);
-	putimagePNG(680, -5, &imgShovelSlot);
+	//putimagePNG(680, -5, &imgShovelSlot);
 	drawCards();
 	drawPlant();
 	drawZombie();
 	drawBullet();
-	drawShovel();
-	drawCar();
+	//drawShovel();
+	//drawCar();
 	drawSunshine();
 	EndBatchDraw();
 }
@@ -837,7 +842,7 @@ void shoot() {
 	}
 }
 
-void updateBullets() {
+void updateBullet() {
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
 	static int count = 0;
 	if (++count < 2) {
@@ -862,6 +867,7 @@ void updateBullets() {
 		}
 	}
 }
+
 void bullet2Zombie() {
 	int bulletMax = sizeof(bullets) / sizeof(bullets[0]);
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
@@ -966,7 +972,7 @@ void car2Zombie() {
 	}
 }
 
-void tu_dou_lei2Zombie() {
+void potato_mine2Zombie() {
 	int zombieMax = sizeof(zombies) / sizeof(zombies[0]);
 	for (int i = 0; i < zombieMax; i++) {
 		int row = zombies[i].row;
@@ -986,7 +992,7 @@ void tu_dou_lei2Zombie() {
 void collisionCheck() {
 	bullet2Zombie();
 	car2Zombie();
-	tu_dou_lei2Zombie();
+	potato_mine2Zombie();
 	zombie2Plant();
 }
 
@@ -1024,7 +1030,7 @@ void boom() {
 	}
 }
 
-void updateCars() {
+void updateCar() {
 	for (int i = 0; i < 5; i++) {
 		if (cars[i].exist && cars[i].trigger) {
 			cars[i].speed = 10;
@@ -1059,9 +1065,9 @@ void updateGame() {
 	createZombie();
 	updateZombie();
 	shoot();
-	updateBullets();
+	updateBullet();
 	boom();
-	updateCars();
+	updateCar();
 	collisionCheck();
 	judgeWin();
 }
@@ -1083,10 +1089,6 @@ void collectSunshine(ExMessage* msg) {
 				double distance = dis(balls[i].p1 - balls[i].p4);
 				double off = 8.0;
 				balls[i].speed = 3.0 / (distance / off);
-				// 设置阳光值最大值
-				if (sunshine >= 9999) {
-					sunshine = 9999;
-				}
 				break;
 			}
 		}
@@ -1099,9 +1101,9 @@ void userClick() {
 		// 鼠标左键点击设定（未选取）
 		if (msg.message == WM_LBUTTONDOWN && firstDown == 0) {
 			if (msg.x > 268 - 112 && msg.x < 268 - 112 + 65 * ZHI_WU_COUNT && msg.y < 96) { // 点击植物卡牌
-				mciSendString("play res/seedlift.mp3", 0, 0, 0);
 				int index = (msg.x - 268 + 112) / 65;
 				if (cards[index].able) {
+					mciSendString("play res/seedlift.mp3", 0, 0, 0);
 					curPlant = index + 1;
 					firstDown = 1;
 					curX = msg.x;
